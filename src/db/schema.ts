@@ -8,7 +8,6 @@ import {
   uniqueIndex,
 } from "drizzle-orm/sqlite-core";
 
-
 const sqlNow = sql`current_timestamp`;
 const createCuid2 = cuid2.init({ length: 11 });
 
@@ -28,7 +27,8 @@ export const urlsTable = sqliteTable(
     id: column.serialId(),
     path: column.text("path", 11).notNull().$defaultFn(createCuid2),
     endpoint: column.text("endpoint", 2048).notNull(),
-    password: column.text("password", 128),
+    hashedPassword: column.text("hashed_password", 128),
+    passwordSalt: column.text("password_salt", 512),
     expiration: column.timestamp("expiration"),
     vists: column.int("visits").notNull().default(0),
     once: column.boolean("once").notNull().default(false),

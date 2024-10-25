@@ -21,9 +21,7 @@ export default async function Home() {
             />
           </label>
 
-          <button className="bg-gray-200 text-gray-900 font-bold py-1 px-3 rounded">
-            Shorten
-          </button>
+          <button className="bg-gray-200 text-gray-900 font-bold py-1 px-3 rounded"></button>
         </form>
       </div>
     </div>
