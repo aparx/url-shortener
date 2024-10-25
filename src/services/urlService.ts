@@ -20,10 +20,12 @@ export interface UrlService {
   /**
    * Inserts `data` into the database and returns the `path` generated.
    * This process basically "shortens" the URL contained in `data`.
+   * If `password` is defined in `data`, it is hashed before insertion.
    *
+   * @throws Error - if `data`'s expiration date is given and not the future
    * @param data the data to be inserted into the database
    */
-  createRedirect(data: CreateRedirectData): Promise<string>;
+  createUrl(data: CreateRedirectData): Promise<string>;
 }
 
 export class UrlServiceImpl implements UrlService {
@@ -39,11 +41,13 @@ export class UrlServiceImpl implements UrlService {
     return subject[0].endpoint;
   }
 
-  async createRedirect(data: CreateRedirectData): Promise<string> {
+  async createUrl(data: CreateRedirectData): Promise<string> {
     const { password, ...restData } = data;
     const [hashedPassword, passwordSalt] = password
       ? this.hashPassword(password)
       : [];
+    if (restData.expiration && restData.expiration.getTime() <= Date.now())
+      throw new Error("Expiration date must be in the future");
     const [result] = await this.database
       .insert(urlsTable)
       .values({ hashedPassword, passwordSalt, ...restData })

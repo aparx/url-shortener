@@ -1,3 +1,4 @@
+import { UrlService } from "@/services/urlService";
 import { MdSubdirectoryArrowRight } from "react-icons/md";
 
 export default async function Home() {
