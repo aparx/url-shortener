@@ -2,6 +2,8 @@ import { UrlService } from "@/services/urlService";
 import { MdSubdirectoryArrowRight } from "react-icons/md";
 
 export default async function Home() {
+  await UrlService.visit("wx3w4aqtdr4");
+
   return (
     <div className="font-[family-name:var(--font-primary)] grid place-items-center min-h-screen mx-auto container">
       <div className="bg-gray-900 p-4 rounded-lg border border-gray-800 flex flex-col gap-2 text-gray-400">

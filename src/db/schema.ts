@@ -18,7 +18,7 @@ const column = {
   int: (name: string) => integer(name),
   serialId: () => column.int("id").primaryKey({ autoIncrement: true }),
   createdAt: () => column.timestamp("created_at").notNull().default(sqlNow),
-  updatedAt: () => column.timestamp("updated_at").$onUpdate(() => sqlNow),
+  updatedAt: () => column.timestamp("updated_at").$onUpdate(() => new Date()),
 } as const;
 
 export const urlsTable = sqliteTable(
@@ -30,7 +30,7 @@ export const urlsTable = sqliteTable(
     hashedPassword: column.text("hashed_password", 128),
     passwordSalt: column.text("password_salt", 512),
     expiration: column.timestamp("expiration"),
-    vists: column.int("visits").notNull().default(0),
+    visits: column.int("visits").notNull().default(0),
     once: column.boolean("once").notNull().default(false),
     disabled: column.boolean("disabled").notNull().default(false),
     createdAt: column.createdAt(),

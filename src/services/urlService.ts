@@ -1,6 +1,6 @@
 import { db, urlsTable } from "@/db";
 import { pbkdf2Sync, randomBytes } from "crypto";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { LibSQLDatabase } from "drizzle-orm/libsql";
 import "server-only";
 import { z } from "zod";
@@ -14,11 +14,15 @@ export const createRedirectDataSchema = z.object({
   expiration: z.date().nullable().optional(),
 });
 
-type HashPasswordFn = (password: string) => [hash: string, salt: string];
-
-export interface UrlService {
+/** The lookup service for URLs, providing read and aggregation processes. */
+export interface UrlLookupService {
   resolveEndpoint(path: string): Promise<string | null>;
 
+  isPasswordMatching(path: string, password: string): Promise<boolean>;
+}
+
+/** The mutation service for URLs, providing write processes. */
+export interface UrlMutationService {
   /**
    * Inserts `data` into the database and returns the `path` generated.
    * This process basically "shortens" the URL contained in `data`.
@@ -28,23 +32,27 @@ export interface UrlService {
    * @param data the data to be inserted into the database
    */
   createUrl(data: CreateRedirectData): Promise<string>;
+
+  visit(path: string): Promise<number | undefined>;
 }
 
-export class UrlServiceImpl implements UrlService {
+export class UrlServiceImpl implements UrlLookupService, UrlMutationService {
   readonly database: LibSQLDatabase;
-  readonly hash: (password: string) => [hash: string, salt: string];
+  readonly hashPassword: (password: string, salt: string) => string;
+  readonly generateSalt: () => string;
 
   constructor(args: {
     database: UrlServiceImpl["database"];
-    hashPassword?: UrlServiceImpl["hash"];
+    hashPassword?: UrlServiceImpl["hashPassword"];
+    generateSalt?: UrlServiceImpl["generateSalt"];
   }) {
     this.database = args.database;
-    this.hash =
+    this.hashPassword =
       args.hashPassword ??
-      ((password: string): [hash: string, salt: string] => {
-        const salt = randomBytes(16).toString("base64");
-        return [pbkdf2Sync(password, salt, 128, 32, "sha512").toString(), salt];
-      });
+      ((password: string, salt: string) =>
+        pbkdf2Sync(password, salt, 128, 32, "sha512").toString());
+    this.generateSalt =
+      args.generateSalt ?? (() => randomBytes(16).toString("base64"));
   }
 
   async resolveEndpoint(path: string): Promise<string | null> {
@@ -57,9 +65,24 @@ export class UrlServiceImpl implements UrlService {
     return subject[0].endpoint;
   }
 
+  async isPasswordMatching(path: string, password: string): Promise<boolean> {
+    const [result] = await this.database
+      .select({ hash: urlsTable.hashedPassword, salt: urlsTable.passwordSalt })
+      .from(urlsTable)
+      .where(eq(urlsTable.path, path))
+      .limit(1);
+    if (result && result.salt)
+      return this.hashPassword(password, result.salt) === result.hash;
+    return false;
+  }
+
   async createUrl(data: CreateRedirectData): Promise<string> {
     const { password, ...restData } = data;
-    const [hashedPassword, passwordSalt] = password ? this.hash(password) : [];
+    const passwordSalt = password ? this.generateSalt() : undefined;
+    const hashedPassword =
+      password && passwordSalt
+        ? this.hashPassword(password, passwordSalt)
+        : undefined;
     if (restData.expiration && restData.expiration.getTime() <= Date.now())
       throw new Error("Expiration date must be in the future");
     const [result] = await this.database
@@ -67,6 +90,16 @@ export class UrlServiceImpl implements UrlService {
       .values({ hashedPassword, passwordSalt, ...restData })
       .returning({ path: urlsTable.path });
     return result.path;
+  }
+
+  async visit(path: string): Promise<number | undefined> {
+    const [result] = await this.database
+      .update(urlsTable)
+      .set({ visits: sql`${urlsTable.visits} + 1` })
+      .where(eq(urlsTable.path, path))
+      .returning({ visits: urlsTable.visits });
+    if (result) console.debug("UrlService#visit", path, result.visits);
+    return result?.visits;
   }
 }
 
