@@ -14,6 +14,8 @@ export const createRedirectDataSchema = z.object({
   expiration: z.date().nullable().optional(),
 });
 
+type HashPasswordFn = (password: string) => [hash: string, salt: string];
+
 export interface UrlService {
   resolveEndpoint(path: string): Promise<string | null>;
 
@@ -29,7 +31,21 @@ export interface UrlService {
 }
 
 export class UrlServiceImpl implements UrlService {
-  constructor(readonly database: LibSQLDatabase) {}
+  readonly database: LibSQLDatabase;
+  readonly hash: (password: string) => [hash: string, salt: string];
+
+  constructor(args: {
+    database: UrlServiceImpl["database"];
+    hashPassword?: UrlServiceImpl["hash"];
+  }) {
+    this.database = args.database;
+    this.hash =
+      args.hashPassword ??
+      ((password: string): [hash: string, salt: string] => {
+        const salt = randomBytes(16).toString("base64");
+        return [pbkdf2Sync(password, salt, 128, 32, "sha512").toString(), salt];
+      });
+  }
 
   async resolveEndpoint(path: string): Promise<string | null> {
     const subject = await this.database
@@ -43,9 +59,7 @@ export class UrlServiceImpl implements UrlService {
 
   async createUrl(data: CreateRedirectData): Promise<string> {
     const { password, ...restData } = data;
-    const [hashedPassword, passwordSalt] = password
-      ? this.hashPassword(password)
-      : [];
+    const [hashedPassword, passwordSalt] = password ? this.hash(password) : [];
     if (restData.expiration && restData.expiration.getTime() <= Date.now())
       throw new Error("Expiration date must be in the future");
     const [result] = await this.database
@@ -54,11 +68,8 @@ export class UrlServiceImpl implements UrlService {
       .returning({ path: urlsTable.path });
     return result.path;
   }
-
-  hashPassword(password: string): [hash: string, salt: string] {
-    const salt = randomBytes(16).toString("base64");
-    return [pbkdf2Sync(password, salt, 128, 32, "sha512").toString(), salt];
-  }
 }
 
-export const UrlService = new UrlServiceImpl(db);
+export const UrlService = new UrlServiceImpl({
+  database: db,
+});
