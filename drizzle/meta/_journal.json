@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "turso",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1729822238256,
+      "tag": "0000_bumpy_enchantress",
+      "breakpoints": true
+    }
+  ]
+}
