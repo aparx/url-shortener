@@ -1,11 +1,13 @@
 "use client";
+import { useEffect } from "react";
 import { useFormState } from "react-dom";
 import { MdSubdirectoryArrowRight } from "react-icons/md";
-import { createUrl } from "./actions";
+import { __test__retrieve, createUrl } from "./actions";
 
 export default function Home() {
   const [state, submit] = useFormState(createUrl, undefined);
   console.log(state);
+
   return (
     <div className="font-[family-name:var(--font-primary)] grid place-items-center min-h-screen mx-auto container">
       <div className="bg-gray-900 p-4 rounded-lg border border-gray-800 flex flex-col gap-2 text-gray-400">

@@ -48,29 +48,29 @@ export interface UrlMutationService {
 }
 
 interface UrlCrypto {
-  encrypt(raw: string, vector: string): string;
-  decrypt(encrypted: string, vector: string): string;
+  encrypt(raw: string, iv: Buffer): string;
+  decrypt(encrypted: string, iv: Buffer): string;
 }
 
 class AESUrlCrypto implements UrlCrypto {
   constructor(
-    readonly key: Buffer<ArrayBuffer>,
+    readonly key: Buffer,
+    readonly encoding: BufferEncoding = "base64",
     readonly algorithm: string = "aes-256-cbc",
   ) {
     if (key == null) throw new Error("AES key must not be nullable");
   }
 
-  encrypt(raw: string, iv: string): string {
-    const ivBuffer = Buffer.from(iv, "base64");
-    const cipher = createCipheriv(this.algorithm, this.key, ivBuffer);
-    let encrypted = cipher.update(raw, "utf8", "hex");
-    encrypted += cipher.final("hex");
+  encrypt(raw: string, iv: Buffer): string {
+    const cipher = createCipheriv(this.algorithm, this.key, iv);
+    let encrypted = cipher.update(raw, "utf8", this.encoding);
+    encrypted += cipher.final(this.encoding);
     return encrypted;
   }
-  decrypt(encrypted: string, iv: string): string {
-    const ivBuffer = Buffer.from(iv, "base64");
-    const decipher = createDecipheriv(this.algorithm, this.key, ivBuffer);
-    let decrypted = decipher.update(encrypted, "hex", "utf8");
+
+  decrypt(encrypted: string, iv: Buffer): string {
+    const decipher = createDecipheriv(this.algorithm, this.key, iv);
+    let decrypted = decipher.update(encrypted, this.encoding, "utf8");
     decrypted += decipher.final("utf8");
     return decrypted;
   }
@@ -78,26 +78,30 @@ class AESUrlCrypto implements UrlCrypto {
 
 export class UrlServiceImpl implements UrlLookupService, UrlMutationService {
   readonly database: LibSQLDatabase;
-  readonly generateSeed: () => string;
-  readonly hashPassword: (string: string, salt: string) => string;
+  readonly generateSeed: () => Buffer;
+  readonly hashPassword: (string: string, salt: Buffer) => string;
   readonly urlCrypto: AESUrlCrypto;
+  readonly encoding: BufferEncoding;
 
   constructor(args: {
     database: UrlServiceImpl["database"];
     generateSeed?: UrlServiceImpl["generateSeed"];
     hashPassword?: UrlServiceImpl["hashPassword"];
     urlCrypto?: UrlServiceImpl["urlCrypto"];
+    encoding?: BufferEncoding;
   }) {
     this.database = args.database;
-    this.generateSeed =
-      args.generateSeed ?? (() => randomBytes(16).toString("base64"));
+    this.encoding = args.encoding ?? "base64";
+    this.generateSeed = args.generateSeed ?? (() => randomBytes(16));
     this.hashPassword =
       args.hashPassword ??
-      ((password: string, salt: string) =>
+      ((password: string, salt: Buffer) =>
         pbkdf2Sync(password, salt, 128, 32, "sha512").toString());
     this.urlCrypto =
       args.urlCrypto ??
-      new AESUrlCrypto(Buffer.from(process.env.URL_ENCRYPTION_KEY!, "base64"));
+      new AESUrlCrypto(
+        Buffer.from(process.env.URL_ENCRYPTION_KEY!, this.encoding),
+      );
   }
 
   async resolveEndpoint(path: string): Promise<string | null> {
@@ -112,7 +116,7 @@ export class UrlServiceImpl implements UrlLookupService, UrlMutationService {
     if (!subject) return null;
     return this.urlCrypto.decrypt(
       subject.encryptedEndpoint,
-      subject.cryptoSeed,
+      Buffer.from(subject.cryptoSeed, this.encoding),
     );
   }
 
@@ -125,18 +129,18 @@ export class UrlServiceImpl implements UrlLookupService, UrlMutationService {
       .from(urlsTable)
       .where(eq(urlsTable.path, path))
       .limit(1);
-    if (result && result.salt)
-      return this.hashPassword(password, result.salt) === result.hash;
-    return false;
+    if (!result || !result.salt) return false;
+    const saltBuffer = Buffer.from(result.salt, this.encoding);
+    return this.hashPassword(password, saltBuffer) === result.hash;
   }
 
   async createUrl(data: CreateRedirectData): Promise<string> {
     const { endpoint, password, expireIn, ...restData } = data;
-    const cryptoSeed = this.generateSeed();
-    const encryptedEndpoint = this.urlCrypto.encrypt(endpoint, cryptoSeed);
+    const seedBuffer = this.generateSeed();
+    const encryptedEndpoint = this.urlCrypto.encrypt(endpoint, seedBuffer);
     const hashedPassword =
-      password && cryptoSeed
-        ? this.hashPassword(password, cryptoSeed)
+      password && seedBuffer
+        ? this.hashPassword(password, seedBuffer)
         : undefined;
     const expiration =
       expireIn && Math.floor(expireIn) > 0
@@ -147,7 +151,7 @@ export class UrlServiceImpl implements UrlLookupService, UrlMutationService {
       .values({
         encryptedEndpoint,
         hashedPassword,
-        cryptoSeed,
+        cryptoSeed: seedBuffer.toString(this.encoding),
         expiration,
         ...restData,
       })
