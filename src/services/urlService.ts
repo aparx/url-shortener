@@ -9,9 +9,10 @@ type CreateRedirectData = z.infer<typeof createRedirectDataSchema>;
 
 export const createRedirectDataSchema = z.object({
   endpoint: z.string().max(2048),
-  password: z.string().max(128).optional(),
+  password: z.string().max(128).nullish().optional(),
   once: z.boolean().optional(),
-  expiration: z.date().nullable().optional(),
+  /** Expire in `x` milliseconds */
+  expireIn: z.number().int().nullish().optional(),
 });
 
 /** The lookup service for URLs, providing read and aggregation processes. */
@@ -24,7 +25,6 @@ export interface UrlLookupService {
 /** The mutation service for URLs, providing write processes. */
 export interface UrlMutationService {
   /**
-   * Inserts `data` into the database and returns the `path` generated.
    * This process basically "shortens" the URL contained in `data`.
    * If `password` is defined in `data`, it is hashed before insertion.
    *
@@ -33,7 +33,13 @@ export interface UrlMutationService {
    */
   createUrl(data: CreateRedirectData): Promise<string>;
 
-  visit(path: string): Promise<number | undefined>;
+  /**
+   * Increments the visit counter for the URL with `path` and returns true, if
+   * the counter could be updated.
+   *
+   * @param path the target path to visit
+   */
+  visit(path: string): Promise<boolean>;
 }
 
 export class UrlServiceImpl implements UrlLookupService, UrlMutationService {
@@ -77,29 +83,27 @@ export class UrlServiceImpl implements UrlLookupService, UrlMutationService {
   }
 
   async createUrl(data: CreateRedirectData): Promise<string> {
-    const { password, ...restData } = data;
+    const { password, expireIn, ...restData } = data;
     const passwordSalt = password ? this.generateSalt() : undefined;
     const hashedPassword =
       password && passwordSalt
         ? this.hashPassword(password, passwordSalt)
         : undefined;
-    if (restData.expiration && restData.expiration.getTime() <= Date.now())
-      throw new Error("Expiration date must be in the future");
+    const expiration =
+      expireIn && expireIn > 0 ? new Date(Date.now() + expireIn) : undefined;
     const [result] = await this.database
       .insert(urlsTable)
-      .values({ hashedPassword, passwordSalt, ...restData })
+      .values({ hashedPassword, passwordSalt, expiration, ...restData })
       .returning({ path: urlsTable.path });
     return result.path;
   }
 
-  async visit(path: string): Promise<number | undefined> {
-    const [result] = await this.database
+  async visit(path: string): Promise<boolean> {
+    const result = await this.database
       .update(urlsTable)
       .set({ visits: sql`${urlsTable.visits} + 1` })
-      .where(eq(urlsTable.path, path))
-      .returning({ visits: urlsTable.visits });
-    if (result) console.debug("UrlService#visit", path, result.visits);
-    return result?.visits;
+      .where(eq(urlsTable.path, path));
+    return result.rowsAffected !== 0;
   }
 }
 
