@@ -26,9 +26,9 @@ export const urlsTable = sqliteTable(
   {
     id: column.serialId(),
     path: column.text("path", 11).notNull().$defaultFn(createCuid2),
-    endpoint: column.text("endpoint", 2048).notNull(),
+    encryptedEndpoint: column.text("encrypted_endpoint", 2048).notNull(),
     hashedPassword: column.text("hashed_password", 128),
-    passwordSalt: column.text("password_salt", 512),
+    cryptoSeed: column.text("seed", 512).notNull(),
     expiration: column.timestamp("expiration"),
     visits: column.int("visits").notNull().default(0),
     once: column.boolean("once").notNull().default(false),

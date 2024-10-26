@@ -14,8 +14,12 @@ export async function createUrl(prevState: any, formData: FormData) {
   if (obj.error)
     return { state: "error", error: obj.error.flatten().fieldErrors };
 
-  return UrlService.createUrl(obj.data).then(
-    (path) => ({ state: "success", path }),
-    (rejectReason) => ({ state: "error", error: { general: rejectReason } }),
-  );
+  return UrlService.createUrl(obj.data).then((path) => ({
+    state: "success",
+    path,
+  }));
+}
+
+export async function __test__retrieve(path: string) {
+  return UrlService.resolveEndpoint(path);
 }

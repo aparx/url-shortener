@@ -6,7 +6,6 @@ import { createUrl } from "./actions";
 export default function Home() {
   const [state, submit] = useFormState(createUrl, undefined);
   console.log(state);
-
   return (
     <div className="font-[family-name:var(--font-primary)] grid place-items-center min-h-screen mx-auto container">
       <div className="bg-gray-900 p-4 rounded-lg border border-gray-800 flex flex-col gap-2 text-gray-400">
@@ -31,7 +30,7 @@ export default function Home() {
             type="number"
             name="expireIn"
             min="0"
-            placeholder="Expiration in hours (optional)"
+            placeholder="Expiration in minutes (optional)"
             className="rounded px-2 py-1 bg-gray-800 border border-gray-700 placeholder-gray-500"
           />
           <input
