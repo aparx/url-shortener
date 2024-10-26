@@ -1,10 +1,12 @@
 import { createCipheriv, createDecipheriv } from "crypto";
 
+/** Interface responsible for encrypting and decrypting Endpoint-URLs. */
 export interface UrlCrypto {
-  encrypt(raw: string, iv: Buffer): string;
-  decrypt(encrypted: string, iv: Buffer): string;
+  encrypt(raw: string, seed: Buffer): string;
+  decrypt(encrypted: string, seed: Buffer): string;
 }
 
+/** `UrlCrypto` implementation, that uses AES to encrypt and decrypt URLs. */
 export class AESUrlCrypto implements UrlCrypto {
   constructor(
     readonly key: Buffer,

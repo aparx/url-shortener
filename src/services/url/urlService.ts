@@ -4,11 +4,38 @@ import { eq, sql } from "drizzle-orm";
 import { LibSQLDatabase } from "drizzle-orm/libsql";
 import "server-only";
 import { AESUrlCrypto, UrlCrypto } from "./urlCrypto";
-import { UrlLookupService } from "./urlLookupService";
-import { UrlMutationService } from "./urlMutationService";
-import { CreateRedirectData } from "./urlSchema";
+import { ShortenUrlData } from "./urlSchema";
 
-export class UrlService implements UrlLookupService, UrlMutationService {
+/** The lookup service for URLs, providing read and aggregation processes. */
+export interface UrlService {
+  isPasswordMatching(path: string, password: string): Promise<boolean>;
+
+  /**
+   * Shortens the endpoint contained in `data`, by inserting a new URL row into
+   * the database and returning the unique path generated.
+   * - If `password` is defined in `data`, it is hashed before insertion.
+   * - The URL is encrypted before insertion into the database.
+   *
+   * @throws Error - if `data`'s expiration date is given and not the future
+   * @param data the data to be inserted into the database
+   */
+  shortenUrl(data: ShortenUrlData): Promise<string>;
+
+  /**
+   * Increments the visit counter for the URL with `path` and returns the
+   * decrypted endpoint for `path`, or null if there is no URL associated with
+   * `path`.
+   * - This function may be a single atomic operation, if the endpoint
+   *   decryption fails, the counter increment is rolled back.
+   *
+   * @param path the target path to visit
+   */
+  visit(path: string): Promise<string | null>;
+}
+
+export class DefaultUrlService implements UrlService {
+  private static _default: DefaultUrlService | undefined;
+
   readonly database: LibSQLDatabase;
   readonly generateSeed: () => Buffer;
   readonly hashPassword: (string: string, salt: Buffer) => string;
@@ -16,11 +43,11 @@ export class UrlService implements UrlLookupService, UrlMutationService {
   readonly encoding: BufferEncoding;
 
   constructor(args: {
-    database: UrlService["database"];
-    generateSeed?: UrlService["generateSeed"];
-    hashPassword?: UrlService["hashPassword"];
-    urlCrypto?: UrlService["urlCrypto"];
-    encoding?: UrlService["encoding"];
+    database: DefaultUrlService["database"];
+    generateSeed?: DefaultUrlService["generateSeed"];
+    hashPassword?: DefaultUrlService["hashPassword"];
+    urlCrypto?: DefaultUrlService["urlCrypto"];
+    encoding?: DefaultUrlService["encoding"];
   }) {
     this.database = args.database;
     this.encoding = args.encoding ?? "base64";
@@ -36,20 +63,28 @@ export class UrlService implements UrlLookupService, UrlMutationService {
       );
   }
 
-  async resolveEndpoint(path: string): Promise<string | null> {
-    const [subject] = await this.database
-      .select({
-        encryptedEndpoint: urlsTable.encryptedEndpoint,
-        cryptoSeed: urlsTable.cryptoSeed,
-      })
-      .from(urlsTable)
-      .where(eq(urlsTable.path, path))
-      .limit(1);
-    if (!subject) return null;
-    return this.urlCrypto.decrypt(
-      subject.encryptedEndpoint,
-      Buffer.from(subject.cryptoSeed, this.encoding),
-    );
+  static default(): DefaultUrlService {
+    if (DefaultUrlService._default != null) return DefaultUrlService._default;
+    DefaultUrlService._default = new DefaultUrlService({ database: db });
+    return DefaultUrlService._default;
+  }
+
+  async visit(path: string): Promise<string | null> {
+    // We use a transaction to rollback the visit counter if an error occurs
+    // with decrypting the endpoint, or anything related to that.
+    return this.database.transaction(async (tx) => {
+      const [result] = await tx
+        .update(urlsTable)
+        .set({ visits: sql`${urlsTable.visits} + 1` })
+        .where(eq(urlsTable.path, path))
+        .returning({
+          cryptoSeed: urlsTable.cryptoSeed,
+          encryptedEndpoint: urlsTable.encryptedEndpoint,
+        });
+      if (!result) return null;
+      const seedBuffer = Buffer.from(result.cryptoSeed, this.encoding);
+      return this.urlCrypto.decrypt(result.encryptedEndpoint, seedBuffer);
+    });
   }
 
   async isPasswordMatching(path: string, password: string): Promise<boolean> {
@@ -66,7 +101,7 @@ export class UrlService implements UrlLookupService, UrlMutationService {
     return this.hashPassword(password, saltBuffer) === result.hash;
   }
 
-  async createUrl(data: CreateRedirectData): Promise<string> {
+  async shortenUrl(data: ShortenUrlData): Promise<string> {
     const { endpoint, password, expireIn, ...restData } = data;
     const seedBuffer = this.generateSeed();
     const encryptedEndpoint = this.urlCrypto.encrypt(endpoint, seedBuffer);
@@ -90,16 +125,8 @@ export class UrlService implements UrlLookupService, UrlMutationService {
       .returning({ path: urlsTable.path });
     return result.path;
   }
-
-  async visit(path: string): Promise<boolean> {
-    const result = await this.database
-      .update(urlsTable)
-      .set({ visits: sql`${urlsTable.visits} + 1` })
-      .where(eq(urlsTable.path, path));
-    return result.rowsAffected !== 0;
-  }
 }
 
-export const DefaultUrlService = new UrlService({
+export const defaultUrlService = new DefaultUrlService({
   database: db,
 });

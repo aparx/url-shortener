@@ -1,17 +1,17 @@
 "use server";
 
 import {
-  createRedirectDataSchema,
-  DefaultUrlService as defaultUrlService,
-  UrlMutationService,
+  shortenUrlInputDataSchema,
+  UrlService,
+  DefaultUrlService,
 } from "@/services/url";
 
 export async function createUrl(_: any, formData: FormData) {
-  return createUrlWithService(formData, defaultUrlService);
+  return createUrlWithService(formData, DefaultUrlService.default());
 }
 
-function createUrlWithService(formData: FormData, service: UrlMutationService) {
-  const obj = createRedirectDataSchema.safeParse({
+function createUrlWithService(formData: FormData, service: UrlService) {
+  const obj = shortenUrlInputDataSchema.safeParse({
     endpoint: formData.get("endpoint"),
     password: formData.get("password"),
     once: Boolean(formData.get("once")),
@@ -24,6 +24,6 @@ function createUrlWithService(formData: FormData, service: UrlMutationService) {
     return { state: "error", error: obj.error.flatten().fieldErrors };
 
   return service
-    .createUrl(obj.data)
+    .shortenUrl(obj.data)
     .then((path) => ({ state: "success", path }));
 }
