@@ -1,94 +1,26 @@
 import { db, urlsTable } from "@/db";
-import {
-  createCipheriv,
-  createDecipheriv,
-  pbkdf2Sync,
-  randomBytes,
-} from "crypto";
+import { pbkdf2Sync, randomBytes } from "crypto";
 import { eq, sql } from "drizzle-orm";
 import { LibSQLDatabase } from "drizzle-orm/libsql";
 import "server-only";
-import { z } from "zod";
+import { AESUrlCrypto, UrlCrypto } from "./urlCrypto";
+import { UrlLookupService } from "./urlLookupService";
+import { UrlMutationService } from "./urlMutationService";
+import { CreateRedirectData } from "./urlSchema";
 
-type CreateRedirectData = z.infer<typeof createRedirectDataSchema>;
-
-export const createRedirectDataSchema = z.object({
-  endpoint: z.string().url().max(2048),
-  password: z.string().max(128).nullish().optional(),
-  once: z.boolean().optional(),
-  /** Expire in `x` minutes */
-  expireIn: z.number().int().nullish().optional(),
-});
-
-/** The lookup service for URLs, providing read and aggregation processes. */
-export interface UrlLookupService {
-  resolveEndpoint(path: string): Promise<string | null>;
-
-  isPasswordMatching(path: string, password: string): Promise<boolean>;
-}
-
-/** The mutation service for URLs, providing write processes. */
-export interface UrlMutationService {
-  /**
-   * This process basically "shortens" the URL contained in `data`.
-   * If `password` is defined in `data`, it is hashed before insertion.
-   *
-   * @throws Error - if `data`'s expiration date is given and not the future
-   * @param data the data to be inserted into the database
-   */
-  createUrl(data: CreateRedirectData): Promise<string>;
-
-  /**
-   * Increments the visit counter for the URL with `path` and returns true, if
-   * the counter could be updated.
-   *
-   * @param path the target path to visit
-   */
-  visit(path: string): Promise<boolean>;
-}
-
-interface UrlCrypto {
-  encrypt(raw: string, iv: Buffer): string;
-  decrypt(encrypted: string, iv: Buffer): string;
-}
-
-class AESUrlCrypto implements UrlCrypto {
-  constructor(
-    readonly key: Buffer,
-    readonly encoding: BufferEncoding = "base64",
-    readonly algorithm: string = "aes-256-cbc",
-  ) {
-    if (key == null) throw new Error("AES key must not be nullable");
-  }
-
-  encrypt(raw: string, iv: Buffer): string {
-    const cipher = createCipheriv(this.algorithm, this.key, iv);
-    let encrypted = cipher.update(raw, "utf8", this.encoding);
-    encrypted += cipher.final(this.encoding);
-    return encrypted;
-  }
-
-  decrypt(encrypted: string, iv: Buffer): string {
-    const decipher = createDecipheriv(this.algorithm, this.key, iv);
-    let decrypted = decipher.update(encrypted, this.encoding, "utf8");
-    decrypted += decipher.final("utf8");
-    return decrypted;
-  }
-}
-
-export class UrlServiceImpl implements UrlLookupService, UrlMutationService {
+export class UrlService implements UrlLookupService, UrlMutationService {
   readonly database: LibSQLDatabase;
   readonly generateSeed: () => Buffer;
   readonly hashPassword: (string: string, salt: Buffer) => string;
-  readonly urlCrypto: AESUrlCrypto;
+  readonly urlCrypto: UrlCrypto;
   readonly encoding: BufferEncoding;
 
   constructor(args: {
-    database: UrlServiceImpl["database"];
-    generateSeed?: UrlServiceImpl["generateSeed"];
-    hashPassword?: UrlServiceImpl["hashPassword"];
-    urlCrypto?: UrlServiceImpl["urlCrypto"];
-    encoding?: BufferEncoding;
+    database: UrlService["database"];
+    generateSeed?: UrlService["generateSeed"];
+    hashPassword?: UrlService["hashPassword"];
+    urlCrypto?: UrlService["urlCrypto"];
+    encoding?: UrlService["encoding"];
   }) {
     this.database = args.database;
     this.encoding = args.encoding ?? "base64";
@@ -168,6 +100,6 @@ export class UrlServiceImpl implements UrlLookupService, UrlMutationService {
   }
 }
 
-export const UrlService = new UrlServiceImpl({
+export const DefaultUrlService = new UrlService({
   database: db,
 });

@@ -1,8 +1,7 @@
 "use client";
-import { useEffect } from "react";
 import { useFormState } from "react-dom";
 import { MdSubdirectoryArrowRight } from "react-icons/md";
-import { __test__retrieve, createUrl } from "./actions";
+import { createUrl } from "./actions";
 
 export default function Home() {
   const [state, submit] = useFormState(createUrl, undefined);
