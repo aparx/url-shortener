@@ -1,13 +1,9 @@
 "use server";
-
-import {
-  shortenUrlInputDataSchema,
-  UrlCoreService,
-  DefaultUrlCoreService,
-} from "@/services/url";
+import { urlCoreService } from "@/services/config";
+import { shortenUrlInputDataSchema, UrlCoreService } from "@/services/url";
 
 export async function createUrl(_: any, formData: FormData) {
-  return createUrlWithService(formData, DefaultUrlCoreService.default());
+  return createUrlWithService(formData, urlCoreService);
 }
 
 function createUrlWithService(formData: FormData, service: UrlCoreService) {

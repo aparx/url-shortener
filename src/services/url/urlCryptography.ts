@@ -5,12 +5,24 @@ import {
   randomBytes,
 } from "crypto";
 
+/**
+ * Interface responsible for providing cryptography and security features for
+ * shortened URLs, such as encrypting and decrypting endpoints, hashing
+ * passwords and generating the crytographic seed.
+ *
+ * The interface also publicly exposes an `encoding` field, further describing
+ * the buffer encoding used for "stringifying" the crypotgraphic seed and its
+ * conversion back to a buffer.
+ */
 export interface UrlCryptography {
   readonly encoding: BufferEncoding;
 
-  encryptUrl(raw: string, seed: Buffer): string;
-  decryptUrl(encrypted: string, seed: Buffer): string;
-  hashPassword(password: string, salt: Buffer): string;
+  encryptUrl(plainUrl: string, seed: Buffer): string;
+
+  decryptUrl(encryptedUrl: string, seed: Buffer): string;
+
+  hashPassword(password: string, seed: Buffer): string;
+
   generateSeed(): Buffer;
 }
 
@@ -33,16 +45,16 @@ export class DefaultUrlCrypto implements UrlCryptography {
     this.algorithm = algorithm;
   }
 
-  encryptUrl(raw: string, iv: Buffer): string {
+  encryptUrl(plainUrl: string, iv: Buffer): string {
     const cipher = createCipheriv(this.algorithm, this.key, iv);
-    let encrypted = cipher.update(raw, "utf8", this.encoding);
+    let encrypted = cipher.update(plainUrl, "utf8", this.encoding);
     encrypted += cipher.final(this.encoding);
     return encrypted;
   }
 
-  decryptUrl(encrypted: string, iv: Buffer): string {
+  decryptUrl(encryptedUrl: string, iv: Buffer): string {
     const decipher = createDecipheriv(this.algorithm, this.key, iv);
-    let decrypted = decipher.update(encrypted, this.encoding, "utf8");
+    let decrypted = decipher.update(encryptedUrl, this.encoding, "utf8");
     decrypted += decipher.final("utf8");
     return decrypted;
   }

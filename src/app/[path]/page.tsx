@@ -1,8 +1,9 @@
 import { urlVisitService } from "@/services/config";
 import { redirect } from "next/navigation";
-import { ExpiredPage } from "./_partial/expired";
-import { NotFoundPage } from "./_partial/notFound";
+import { ErrorPage } from "./_partial/error";
 import { PasswordPage } from "./_partial/password";
+
+export const dynamic = "force-dynamic";
 
 export default async function Page({
   params,
@@ -18,9 +19,9 @@ export default async function Page({
   if (result?.state !== "error") return redirect(result.endpoint);
   switch (result.code) {
     case "not-found":
-      return <NotFoundPage path={params.path} />;
+      return <ErrorPage>Link not found</ErrorPage>;
     case "expired":
-      return <ExpiredPage path={params.path} />;
+      return <ErrorPage>This link is expired</ErrorPage>;
     case "wrong-password":
       return <PasswordPage path={params.path} />;
     default:

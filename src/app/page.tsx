@@ -50,7 +50,9 @@ export default function Home() {
             Once
           </label>
           {JSON.stringify(state)}
-          <button className="bg-gray-200 text-gray-900 font-bold py-1 px-3 rounded"></button>
+          <button className="bg-gray-200 text-gray-900 font-bold py-1 px-3 rounded">
+            Shorten
+          </button>
         </form>
       </div>
     </div>

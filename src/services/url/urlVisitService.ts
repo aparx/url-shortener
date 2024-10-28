@@ -3,17 +3,15 @@ import { eq, sql } from "drizzle-orm";
 import "server-only";
 import { UrlCoreService } from "./urlCoreService";
 
+type VisitAttemptResultErrorCode =
+  | "not-found"
+  | "wrong-password"
+  | "expired"
+  | "endpoint";
+
 type VisitAttemptResult =
-  | {
-      state: "error";
-      code: "not-found" | "wrong-password" | "expired" | "endpoint";
-      endpoint?: never;
-    }
-  | {
-      state: "success";
-      code?: never;
-      endpoint: string;
-    };
+  | { state: "error"; code: VisitAttemptResultErrorCode; endpoint?: never }
+  | { state: "success"; code?: never; endpoint: string };
 
 export interface UrlVisitService {
   /**
@@ -27,9 +25,13 @@ export interface UrlVisitService {
    *   the password, possible expirations (one-time, date, ...), and more.
    *
    * @param path the target path to attempt to visit
-   * @param password
+   * @param plainPassword the (potential) password of `path` in plaintext
+   * @returns the result of the attempted visit of `path`
    */
-  attemptVisit(path: string, password?: string): Promise<VisitAttemptResult>;
+  attemptVisit(
+    path: string,
+    plainPassword?: string,
+  ): Promise<VisitAttemptResult>;
 
   /**
    * Increments the visit counter for the URL with `path` and returns the

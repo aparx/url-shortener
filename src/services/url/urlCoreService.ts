@@ -63,7 +63,10 @@ export class DefaultUrlCoreService implements UrlCoreService {
 
   async matchesPassword(path: string, password: string): Promise<boolean> {
     const [result] = await this.database
-      .select({ hash: urlsTable.hashedPassword, salt: urlsTable.cryptoSeed })
+      .select({
+        hash: urlsTable.hashedPassword,
+        salt: urlsTable.cryptoSeed,
+      })
       .from(urlsTable)
       .where(eq(urlsTable.path, path))
       .limit(1);
