@@ -2,15 +2,15 @@
 
 import {
   shortenUrlInputDataSchema,
-  UrlService,
-  DefaultUrlService,
+  UrlCoreService,
+  DefaultUrlCoreService,
 } from "@/services/url";
 
 export async function createUrl(_: any, formData: FormData) {
-  return createUrlWithService(formData, DefaultUrlService.default());
+  return createUrlWithService(formData, DefaultUrlCoreService.default());
 }
 
-function createUrlWithService(formData: FormData, service: UrlService) {
+function createUrlWithService(formData: FormData, service: UrlCoreService) {
   const obj = shortenUrlInputDataSchema.safeParse({
     endpoint: formData.get("endpoint"),
     password: formData.get("password"),
