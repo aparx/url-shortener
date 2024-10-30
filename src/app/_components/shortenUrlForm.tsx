@@ -59,7 +59,7 @@ export function ShortenUrlForm({
         >
           Reset
         </button>
-        <button className="flex flex-1 justify-center items-center gap-2 bg-neutral-300 disabled:opacity-35 p-2 border rounded font-semibold text-black">
+        <button className="flex flex-1 justify-center items-center gap-2 bg-neutral-300 disabled:opacity-35 p-2 border rounded font-semibold text-black whitespace-nowrap">
           Shorten URL
           <GrLinkNext className="sm:block hidden" />
         </button>

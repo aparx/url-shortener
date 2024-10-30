@@ -24,7 +24,7 @@ export default function Home() {
         Shorten an URL. Securely.
       </h2>
 
-      <div className="flex flex-col flex-shrink gap-4 border-neutral-800 bg-black p-4 border rounded-lg max-w-[min(375px,100vw)]">
+      <div className="flex flex-col flex-shrink gap-4 border-neutral-800 bg-black p-4 border rounded-lg max-w-[min(375px,calc(100vw-1rem))]">
         <TabGroup
           className="mx-auto"
           tabs={tabs.map((x) => x.name)}
@@ -56,6 +56,14 @@ function EssentialPage({ state }: ShortenUrlFormState) {
         leading={<MdTag size="1.25em" className="text-neutral-600" />}
         error={state?.state === "error" ? state.error.path : undefined}
         defaultValue={state?.fields?.path || undefined}
+        maxLength={32}
+        pattern={/^[a-zA-Z0-9_-]$/.source}
+        onChange={(e) => {
+          e.target.value = e.target.value
+            .trimStart()
+            .replace(/\s+/g, "-")
+            .replace(/[^a-zA-Z0-9_-]/g, "");
+        }}
       />
     </>
   );
@@ -94,7 +102,7 @@ const expirationItems: ReadonlyArray<{
 
 function ExpirationPage({ state }: ShortenUrlFormState) {
   return (
-    <fieldset className="gap-2 border-neutral-800 grid grid-cols-[repeat(auto-fit,minmax(100px,1fr))] p-1 border rounded-lg h-full">
+    <fieldset className="gap-2 border-neutral-800 grid grid-cols-[repeat(auto-fit,minmax(100px,1fr))] p-1 border rounded-lg h-full max-h-52 overflow-y-auto">
       {expirationItems.map((item) => (
         <label
           key={item.text}
