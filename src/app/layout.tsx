@@ -28,6 +28,7 @@ export default async function RootLayout({
       <body
         className={`${inter.variable} ${code.variable} bg-black text-neutral-200 antialiased text-sm`}
       >
+        <div className="bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] [mask-image:radial-gradient(white,rgba(0,0,0,.25))] -z-10 absolute inset-0 bg-transparent bg-[size:24px_24px] w-full h-full" />
         {children}
       </body>
     </html>
