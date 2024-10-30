@@ -1,5 +1,10 @@
 "use client";
-import { ChangeEventHandler, InputHTMLAttributes, useId } from "react";
+import {
+  ChangeEventHandler,
+  forwardRef,
+  InputHTMLAttributes,
+  useId,
+} from "react";
 import { MdErrorOutline } from "react-icons/md";
 import { twMerge } from "tailwind-merge";
 
@@ -32,60 +37,72 @@ export interface TextFieldProps extends TextFieldBaseProps {
   error?: string | string[] | undefined | null;
 }
 
-export function TextField({
-  type = "text",
-  label,
-  placeholder,
-  className,
-  leading,
-  tailing,
-  error,
-  ...inputProps
-}: TextFieldProps) {
-  const describeId = useId();
+export type TextFieldRef = HTMLInputElement;
 
-  return (
-    <div className="flex flex-col gap-1">
-      {label && (
-        <span className="relative w-fit">
-          {label}
-          {inputProps.required && (
-            <div className="-top-1 left-full absolute ml-0.5 text-lg text-sky-300">*</div>
-          )}
-        </span>
-      )}
-      <label
-        className={twMerge(
-          "flex items-center gap-2 border-neutral-800 focus-within:border-neutral-600 bg-neutral-900 p-2 border rounded w-full text-neutral-400 focus-within:text-neutral-300 transition-colors",
-          className,
-          error && "border-red-500",
+export const TextField = forwardRef<TextFieldRef, TextFieldProps>(
+  function TextField(props, inputRef) {
+    const {
+      type = "text",
+      label,
+      placeholder,
+      className,
+      leading,
+      tailing,
+      error,
+      ...inputProps
+    } = props;
+    const describeId = useId();
+
+    return (
+      <div className="flex flex-col gap-1">
+        {label && (
+          <span className="relative w-fit">
+            {label}
+            {inputProps.required && (
+              <div className="-top-1 left-full absolute ml-0.5 text-lg text-sky-300">
+                *
+              </div>
+            )}
+          </span>
         )}
-      >
-        {leading ? (
-          <span className="flex items-center text-neutral-600">{leading}</span>
-        ) : null}
-        <input
-          type={type}
-          placeholder={placeholder}
-          className="bg-transparent w-full text-inherit placeholder:text-neutral-600 outline-none"
-          aria-describedby={describeId}
-          {...inputProps}
-        />
-        {tailing ? (
-          <span className="flex items-center text-neutral-600">{tailing}</span>
-        ) : null}
-      </label>
-      {error && (
-        <p
-          id={describeId}
-          role="alert"
-          aria-live="assertive"
-          className="flex items-center gap-1 text-red-400 text-xs"
+        <label
+          className={twMerge(
+            "flex items-center gap-2 border-neutral-800 focus-within:border-neutral-600 bg-neutral-900 p-2 border rounded w-full text-neutral-400 focus-within:text-neutral-300 transition-colors",
+            className,
+            error && "border-red-500",
+          )}
         >
-          <MdErrorOutline size="1.15em" />
-          {error}
-        </p>
-      )}
-    </div>
-  );
-}
+          {leading ? (
+            <span className="flex items-center text-neutral-600">
+              {leading}
+            </span>
+          ) : null}
+          <input
+            ref={inputRef}
+            type={type}
+            placeholder={placeholder}
+            className="bg-transparent w-full text-inherit placeholder:text-neutral-600 outline-none"
+            aria-describedby={describeId}
+            {...inputProps}
+          />
+          {tailing ? (
+            <span className="flex items-center text-neutral-600">
+              {tailing}
+            </span>
+          ) : null}
+        </label>
+        {error && (
+          <p
+            id={describeId}
+            role="alert"
+            aria-live="assertive"
+            className="flex items-center gap-1 text-red-400 text-xs"
+          >
+            <MdErrorOutline size="1.15em" />
+            {error}
+          </p>
+        )}
+      </div>
+    );
+  },
+);

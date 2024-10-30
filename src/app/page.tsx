@@ -18,7 +18,7 @@ export default function Home() {
   const [tabIndex, setTabIndex] = useState<number>(0);
 
   return (
-    <section className="flex flex-col justify-center items-center gap-16 mx-auto min-h-screen font-[family-name:var(--font-primary)]">
+    <section className="flex flex-col justify-center items-center gap-16 mx-auto min-h-screen">
       <h2 className="font-bold text-2xl text-white">
         Shorten an URL. Securely.
       </h2>
