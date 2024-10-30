@@ -3,21 +3,21 @@ import { motion } from "framer-motion";
 import { ComponentPropsWithoutRef, useId, useState } from "react";
 import { twMerge } from "tailwind-merge";
 
-type TabsBaseProps = Omit<ComponentPropsWithoutRef<"div">, "children">;
+type TabGroupBaseProps = Omit<ComponentPropsWithoutRef<"div">, "children">;
 
-export interface TabsProps extends TabsBaseProps {
+export interface TabGroupProps extends TabGroupBaseProps {
   tabs: ReadonlyArray<string>;
   defaultTab?: number | undefined;
   onTabUpdate?: (newTab: number, oldTab: number | undefined) => void;
 }
 
-export function Tabs({
+export function TabGroup({
   tabs,
   className,
   defaultTab,
   onTabUpdate,
   ...restProps
-}: TabsProps) {
+}: TabGroupProps) {
   const layoutId = useId();
   const [activeId, setActive] = useState<number | undefined>(defaultTab);
 

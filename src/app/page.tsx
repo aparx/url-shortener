@@ -1,14 +1,29 @@
 "use client";
-import { CheckField, PassField, Tabs, TextField } from "@/components";
-import { useState } from "react";
-import { useFormState } from "react-dom";
-import { GrLinkNext } from "react-icons/gr";
+import { CheckField, PassField, TabGroup, TextField } from "@/components";
+import React, { useState } from "react";
 import { MdLink, MdPassword, MdTag } from "react-icons/md";
-import { createUrl } from "./actions";
+import {
+  CreateForm,
+  CreateFormState,
+  CreateFormTab,
+} from "./_components/createForm";
+
+const tabs: CreateFormTab[] = [
+  {
+    name: "Essential",
+    page: React.memo(EssentialPage),
+  },
+  {
+    name: "Security",
+    page: React.memo(SecurityPage),
+  },
+  {
+    name: "Expiration",
+    page: React.memo(ExpirationPage),
+  },
+] as const;
 
 export default function Home() {
-  const [state, submit] = useFormState(createUrl, undefined);
-  const tabs = ["Essential", "Security", "Expiration"] as const;
   const [tabIndex, setTabIndex] = useState<number>(0);
 
   return (
@@ -18,70 +33,94 @@ export default function Home() {
         Shorten an URL. Securely.
       </h2>
 
-      <div className="flex flex-col flex-shrink gap-4 border-neutral-800 bg-black p-4 border rounded-lg max-w-[min(350px,100vw)]">
+      <div className="flex flex-col flex-shrink gap-4 border-neutral-800 bg-black p-4 border rounded-lg max-w-[min(375px,100vw)]">
         <div className="border-neutral-800 mx-auto p-1 border rounded-lg w-full max-w-fit overflow-hidden overflow-x-auto list-none">
-          <Tabs tabs={tabs} onTabUpdate={setTabIndex} defaultTab={0} />
+          <TabGroup
+            tabs={tabs.map((x) => x.name)}
+            onTabUpdate={setTabIndex}
+            defaultTab={0}
+          />
         </div>
-        <form action={submit} className="flex flex-col gap-4 overflow-hidden">
-          <div
-            className="flex gap-4"
-            style={{
-              transform: `translateX(calc(-${tabIndex * 100}% - ${tabIndex} * 1rem))`,
-              transition: ".4s transform",
-            }}
-          >
-            <FormPage>
-              <TextField
-                name="endpoint"
-                label="Endpoint URL"
-                placeholder="https://aparx.dev"
-                leading={<MdLink size="1.25em" className="text-neutral-600" />}
-                required
-              />
-              <TextField
-                name="alias"
-                label="Custom alias (optional)"
-                placeholder="hello-world"
-                leading={<MdTag size="1.25em" className="text-neutral-600" />}
-              />
-            </FormPage>
-            <FormPage>
-              <PassField
-                name="password"
-                label="Password (optional)"
-                placeholder="Password"
-                leading={
-                  <MdPassword size="1.25em" className="text-neutral-600" />
-                }
-              />
-              <CheckField label="One-Time use only" name="once" />
-            </FormPage>
-            <FormPage>
-              <input
-                type="number"
-                placeholder="Expire in min"
-                name="expireIn"
-              />
-            </FormPage>
-          </div>
-          <div className="flex gap-4">
-            {JSON.stringify(state)}
-            <button className="flex-1 border-neutral-800 bg-neutral-950 p-2 border rounded text-neutral-300">
-              Reset
-            </button>
-            <button className="flex flex-1 justify-center items-center gap-2 bg-neutral-300 disabled:opacity-35 p-2 border rounded font-semibold text-black">
-              Shorten URL
-              <GrLinkNext className="sm:block hidden" />
-            </button>
-          </div>
-        </form>
+        <CreateForm tabIndex={tabIndex} tabs={tabs} />
       </div>
     </section>
   );
 }
 
-function FormPage({ children }: { children: React.ReactNode }) {
+function EssentialPage({ state }: CreateFormState) {
   return (
-    <div className="flex flex-col flex-shrink-0 gap-3 w-full">{children}</div>
+    <>
+      <TextField
+        name="endpoint"
+        label="Endpoint URL"
+        placeholder="https://aparx.dev"
+        leading={<MdLink size="1.25em" className="text-neutral-600" />}
+        error={state?.state === "error" ? state.error.endpoint : undefined}
+        required
+      />
+      <TextField
+        name="alias"
+        label="Custom alias (optional)"
+        placeholder="hello-world"
+        leading={<MdTag size="1.25em" className="text-neutral-600" />}
+      />
+    </>
+  );
+}
+
+function SecurityPage({ state }: CreateFormState) {
+  return (
+    <>
+      <PassField
+        name="password"
+        label="Password (optional)"
+        placeholder="Password"
+        leading={<MdPassword size="1.25em" className="text-neutral-600" />}
+        error={state?.state === "error" ? state.error.password : undefined}
+      />
+      <CheckField label="One-Time use only" name="once" />
+    </>
+  );
+}
+
+const expirationItems: ReadonlyArray<{
+  mins?: number | undefined;
+  text: string;
+}> = [
+  { text: "Never" },
+  { mins: 15, text: "15 mins" },
+  { mins: 30, text: "30 mins" },
+  { mins: 60, text: "1 hour" },
+  { mins: 6 * 60, text: "6 hours" },
+  { mins: 24 * 60, text: "1 day" },
+  { mins: 3 * 24 * 60, text: "3 days" },
+  { mins: 7 * 24 * 60, text: "7 days" },
+  { mins: 30 * 24 * 60, text: "1 month" },
+  { mins: 3 * 30 * 24 * 60, text: "3 months" },
+  { mins: 6 * 30 * 24 * 60, text: "6 months" },
+  { mins: 12 * 30 * 24 * 60, text: "1 year" },
+] as const;
+
+function ExpirationPage() {
+  return (
+    <fieldset className="gap-2 border-neutral-800 grid grid-cols-[repeat(auto-fit,minmax(100px,1fr))] p-1 border rounded-lg h-full">
+      {expirationItems.map((item) => (
+        <label
+          key={item.mins}
+          className="flex items-center gap-2 border-neutral-700 hover:border-neutral-600 [&:has(input:checked)]:bg-neutral-300 hover:bg-neutral-950 focus-within:bg-neutral-950 px-2 py-1 rounded [&:has(input:checked)]:font-semibold text-neutral-400 [&:has(input:checked)]:text-neutral-950 transition-all cursor-pointer"
+        >
+          <input
+            type="radio"
+            name="expireIn"
+            value={item.mins}
+            aria-label={item.text}
+            className="peer sr-only"
+            defaultChecked={!item.mins}
+          />
+          <span className="relative peer-checked:after:absolute peer-checked:after:inset-0.5 border-neutral-600 peer-checked:border-sky-950 peer-checked:after:bg-sky-950 border rounded-full peer-checked:after:rounded-full w-3 h-3 transition-colors after:transition-colors" />
+          {item.text}
+        </label>
+      ))}
+    </fieldset>
   );
 }

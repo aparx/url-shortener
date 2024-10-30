@@ -17,9 +17,12 @@ function createUrlWithService(formData: FormData, service: UrlCoreService) {
   });
 
   if (obj.error)
-    return { state: "error", error: obj.error.flatten().fieldErrors };
+    return {
+      state: "error",
+      error: obj.error.flatten().fieldErrors,
+    } as const;
 
   return service
     .shortenUrl(obj.data)
-    .then((path) => ({ state: "success", path }));
+    .then((path) => ({ state: "success", path }) as const);
 }

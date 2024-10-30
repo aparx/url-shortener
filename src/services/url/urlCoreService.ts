@@ -85,7 +85,7 @@ export class DefaultUrlCoreService implements UrlCoreService {
         : undefined;
     const expiration =
       expireIn && Math.floor(expireIn) > 0
-        ? new Date(Math.round(Date.now() + expireIn * 1000 * 60 * 60))
+        ? new Date(Math.round(Date.now() + expireIn * 1000 * 60))
         : undefined;
     const [result] = await this.database
       .insert(urlsTable)
