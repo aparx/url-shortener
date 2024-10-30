@@ -11,6 +11,14 @@ export interface TabGroupProps extends TabGroupBaseProps {
   onTabUpdate?: (newTab: number, oldTab: number | undefined) => void;
 }
 
+export function createTabGroupTabId(tabName: string) {
+  return `tab-${tabName.toLowerCase()}`;
+}
+
+export function createTabGroupPanelId(tabName: string) {
+  return `panel-${tabName.toLowerCase()}`;
+}
+
 export function TabGroup({
   tabs,
   className,
@@ -27,14 +35,18 @@ export function TabGroup({
         "border-neutral-800 p-1 border rounded-lg w-full max-w-fit overflow-hidden overflow-x-auto list-none",
         className,
       )}
+      {...restProps}
     >
-      <div className={"relative z-10 flex gap-5"} {...restProps}>
+      <div role="tablist" className={"relative z-10 flex gap-5"}>
         {tabs.map((tab, index) => (
           <button
             key={tab}
+            id={createTabGroupTabId(tab)}
             data-active={activeId === index}
+            aria-selected={activeId === index}
             className="relative flex items-center gap-2 px-2 py-1.5 rounded text-neutral-500 hover:text-neutral-600 focus-visible:text-neutral-600 data-[active='true']:text-sky-300 transition-colors"
             role="tab"
+            aria-controls={createTabGroupPanelId(tab)}
             onClick={() =>
               setActive((oldTab) => {
                 onTabUpdate?.(index, oldTab);

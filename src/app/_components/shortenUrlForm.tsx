@@ -1,5 +1,6 @@
 "use client";
-import { ComponentPropsWithoutRef } from "react";
+import { createTabGroupPanelId, createTabGroupTabId } from "@/components";
+import React, { ComponentPropsWithoutRef, useEffect, useRef } from "react";
 import { useFormState } from "react-dom";
 import { GrLinkNext } from "react-icons/gr";
 import { twMerge } from "tailwind-merge";
@@ -46,10 +47,10 @@ export function ShortenUrlForm({
           transition: ".4s transform",
         }}
       >
-        {tabs.map(({ name, page: Page }) => (
-          <div key={name} className="flex flex-col flex-shrink-0 gap-3 w-full">
+        {tabs.map(({ name, page: Page }, i) => (
+          <TabPageContainer key={name} name={name} active={tabIndex === i}>
             <Page submit={submit} state={state} />
-          </div>
+          </TabPageContainer>
         ))}
       </div>
       <div className="flex gap-4">
@@ -65,5 +66,36 @@ export function ShortenUrlForm({
         </button>
       </div>
     </form>
+  );
+}
+
+function TabPageContainer({
+  name,
+  children,
+  active,
+}: {
+  name: string;
+  children: React.ReactNode;
+  active?: boolean;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    // Disable tabbing of each possible supported inputs
+    // TODO extend the query selector, if new form components are added
+    const query = ref.current?.querySelectorAll("a, button, input");
+    if (!active) query?.forEach((x) => x.setAttribute("tabIndex", "-1"));
+    else query?.forEach((x) => x.removeAttribute("tabIndex"));
+  }, [active]);
+
+  return (
+    <div
+      id={createTabGroupPanelId(name)}
+      ref={ref}
+      aria-hidden={!active}
+      aria-labelledby={createTabGroupTabId(name)}
+      className="flex flex-col flex-shrink-0 gap-3 w-full"
+    >
+      {children}
+    </div>
   );
 }
