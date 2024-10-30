@@ -15,7 +15,7 @@ export default function Home() {
     <section className="flex flex-col justify-center items-center gap-16 mx-auto min-h-screen font-[family-name:var(--font-primary)]">
       <div className="bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] -z-10 absolute inset-0 bg-transparent bg-[size:24px_24px] w-full h-full"></div>
       <h2 className="font-bold text-2xl text-white">
-        Shorten an URL
+        Shorten an URL. Securely.
       </h2>
 
       <div className="flex flex-col flex-shrink gap-4 border-neutral-800 bg-black p-4 border rounded-lg max-w-[min(350px,100vw)]">
