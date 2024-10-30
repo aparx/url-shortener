@@ -14,6 +14,7 @@ type TextFieldKeys =
   | "name"
   | "pattern"
   | "placeholder"
+  | "defaultValue"
   | "value";
 
 type TextFieldBaseProps = Pick<

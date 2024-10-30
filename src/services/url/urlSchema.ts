@@ -8,4 +8,9 @@ export const shortenUrlInputDataSchema = z.object({
   once: z.boolean().optional(),
   /** Expire in `x` minutes */
   expireIn: z.number().int().nullish().optional(),
+  path: z
+    .string()
+    .regex(/^[A-Za-z0-9_-]{0,32}$/, "Must only contain alphanumerics, _ or -")
+    .max(32)
+    .optional(),
 });

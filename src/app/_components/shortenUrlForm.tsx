@@ -1,32 +1,44 @@
 "use client";
+import { ComponentPropsWithoutRef } from "react";
 import { useFormState } from "react-dom";
 import { GrLinkNext } from "react-icons/gr";
-import { createUrl } from "../actions";
+import { twMerge } from "tailwind-merge";
+import { shortenUrl } from "../actions";
 
 type Awaited<T> = T extends Promise<infer V> ? V : never;
-type CreateFormStateData = Awaited<ReturnType<typeof createUrl>>;
 
-export interface CreateFormState {
-  state?: CreateFormStateData | undefined;
+type ShortenUrlFormBaseProps = Omit<ComponentPropsWithoutRef<"form">, "action">;
+
+export interface ShortenUrlFormState {
+  state?: Awaited<ReturnType<typeof shortenUrl>> | undefined;
   submit: (payload: FormData) => void;
 }
 
-export interface CreateFormTab {
+export interface ShortenUrlFormTab {
   name: string;
-  page: (props: CreateFormState) => React.ReactNode;
+  page: (props: ShortenUrlFormState) => React.ReactNode;
 }
 
-export interface CreateFormProps {
-  tabs: CreateFormTab[];
+export interface ShortenUrlFormProps extends ShortenUrlFormBaseProps {
+  tabs: ReadonlyArray<ShortenUrlFormTab>;
   /** The currently active tab index */
   tabIndex: number;
 }
 
-export function CreateForm({ tabs, tabIndex }: CreateFormProps) {
-  const [state, submit] = useFormState(createUrl, undefined);
+export function ShortenUrlForm({
+  tabs,
+  tabIndex,
+  className,
+  ...restProps
+}: ShortenUrlFormProps) {
+  const [state, submit] = useFormState(shortenUrl, undefined);
 
   return (
-    <form action={submit} className="flex flex-col gap-4 overflow-hidden">
+    <form
+      action={submit}
+      className={twMerge("flex flex-col gap-4 overflow-hidden", className)}
+      {...restProps}
+    >
       <div
         className="flex gap-4"
         style={{
@@ -41,7 +53,10 @@ export function CreateForm({ tabs, tabIndex }: CreateFormProps) {
         ))}
       </div>
       <div className="flex gap-4">
-        <button className="flex-1 border-neutral-800 bg-neutral-950 p-2 border rounded text-neutral-300">
+        <button
+          type="button"
+          className="flex-1 border-neutral-800 bg-neutral-950 p-2 border rounded text-neutral-300"
+        >
           Reset
         </button>
         <button className="flex flex-1 justify-center items-center gap-2 bg-neutral-300 disabled:opacity-35 p-2 border rounded font-semibold text-black">
