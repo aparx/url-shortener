@@ -12,6 +12,7 @@
     "@libsql/client": "^0.14.0",
     "@paralleldrive/cuid2": "^2.2.2",
     "drizzle-orm": "^0.35.3",
+    "framer-motion": "^11.11.10",
     "next": "15.0.0-rc.1",
     "pbkdf2": "^3.1.2",
     "react": "19.0.0-rc-1631855f-20241023",

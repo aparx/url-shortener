@@ -10,6 +10,9 @@ dependencies:
   drizzle-orm:
     specifier: ^0.35.3
     version: 0.35.3(@libsql/client-wasm@0.14.0)(@libsql/client@0.14.0)(@types/react@18.3.12)(react@19.0.0-rc-1631855f-20241023)
+  framer-motion:
+    specifier: ^11.11.10
+    version: 11.11.10(react-dom@19.0.0-rc-1631855f-20241023)(react@19.0.0-rc-1631855f-20241023)
   next:
     specifier: 15.0.0-rc.1
     version: 15.0.0-rc.1(react-dom@19.0.0-rc-1631855f-20241023)(react@19.0.0-rc-1631855f-20241023)
@@ -2647,6 +2650,25 @@ packages:
     engines: {node: '>=12.20.0'}
     dependencies:
       fetch-blob: 3.2.0
+    dev: false
+
+  /framer-motion@11.11.10(react-dom@19.0.0-rc-1631855f-20241023)(react@19.0.0-rc-1631855f-20241023):
+    resolution: {integrity: sha512-061Bt1jL/vIm+diYIiA4dP/Yld7vD47ROextS7ESBW5hr4wQFhxB5D5T5zAc3c/5me3cOa+iO5LqhA38WDln/A==}
+    peerDependencies:
+      '@emotion/is-prop-valid': '*'
+      react: ^18.0.0
+      react-dom: ^18.0.0
+    peerDependenciesMeta:
+      '@emotion/is-prop-valid':
+        optional: true
+      react:
+        optional: true
+      react-dom:
+        optional: true
+    dependencies:
+      react: 19.0.0-rc-1631855f-20241023
+      react-dom: 19.0.0-rc-1631855f-20241023(react@19.0.0-rc-1631855f-20241023)
+      tslib: 2.8.0
     dev: false
 
   /fs.realpath@1.0.0:

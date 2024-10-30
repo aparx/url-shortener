@@ -25,7 +25,7 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${inter.variable} ${code.variable} bg-gray-950 text-gray-200 antialiased`}
+        className={`${inter.variable} ${code.variable} bg-black text-neutral-200 antialiased text-sm`}
       >
         {children}
       </body>
