@@ -1,14 +1,17 @@
 "use client";
 import { Button, PassField, PassFieldRef } from "@/components";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef } from "react";
-import { useFormState } from "react-dom";
+import { useActionState, useEffect, useRef } from "react";
 import { GrLinkNext } from "react-icons/gr";
+import { ImSpinner7 } from "react-icons/im";
 import { MdLock, MdPassword } from "react-icons/md";
 import { visitWithPassword } from "../actions";
 
 export function PasswordPage({ path }: { path: string }) {
-  const [state, submit] = useFormState(visitWithPassword, undefined);
+  const [state, submit, isPending] = useActionState(
+    visitWithPassword,
+    undefined,
+  );
   const fieldRef = useRef<PassFieldRef>(null);
   const router = useRouter();
 
@@ -40,12 +43,17 @@ export function PasswordPage({ path }: { path: string }) {
             type="button"
             className="flex-1"
             onClick={() => router.back()}
+            disabled={isPending}
           >
             Go Back
           </Button>
-          <Button className="flex-1" color="cta">
+          <Button className="flex-1" color="cta" disabled={isPending}>
             Proceed
-            <GrLinkNext className="sm:block hidden" />
+            {isPending ? (
+              <ImSpinner7 className="animate-spin" />
+            ) : (
+              <GrLinkNext className="sm:block hidden" />
+            )}
           </Button>
         </div>
       </form>
