@@ -1,12 +1,19 @@
 "use client";
 import { CheckField, PassField, TabGroup, TextField } from "@/components";
-import { memo, useState } from "react";
+import { useEncodedSearchParam } from "@/hooks/useEncodedSearchParam";
+import { useRouter } from "next/navigation";
+import React, { memo, useMemo, useState } from "react";
 import { MdLink, MdPassword, MdTag } from "react-icons/md";
 import {
   ShortenUrlForm,
   ShortenUrlFormState,
   ShortenUrlFormTab,
 } from "./_components/shortenUrlForm";
+import {
+  ShortenedModalData,
+  shortenedModalDataSchema,
+  ShortenedUrlModal,
+} from "./_partials/shortenedUrlModal";
 
 const tabs: Readonly<ShortenUrlFormTab[]> = Object.freeze([
   { name: "Essential", page: memo(EssentialPage) },
@@ -14,25 +21,91 @@ const tabs: Readonly<ShortenUrlFormTab[]> = Object.freeze([
   { name: "Expiration", page: memo(ExpirationPage) },
 ]);
 
-export default function Home() {
+function usePushModalData(): [
+  push: (data: ShortenedModalData) => void,
+  resolve: (encodedValue: string | undefined) => ShortenedModalData | undefined,
+  close: () => void,
+] {
+  // TODO extract into separate utility hook
+  const router = useRouter();
+  return useMemo(
+    () => [
+      (data: ShortenedModalData) => {
+        const buffer = Buffer.from(JSON.stringify(data), "utf8");
+        const component = encodeURIComponent(buffer.toString("base64"));
+        router.push(`/?created=${component}`);
+      },
+      (encodedValue: string | undefined): ShortenedModalData | undefined => {
+        if (!encodedValue) return undefined;
+        const buffer = Buffer.from(decodeURIComponent(encodedValue), "base64");
+        const jsonObject = JSON.parse(buffer.toString("utf8"));
+        return shortenedModalDataSchema.safeParse(jsonObject)?.data;
+      },
+      () => router.replace(`/`, { scroll: false }),
+    ],
+    [router],
+  );
+}
+
+export default function Home({
+  searchParams: searchParamsPromise,
+}: {
+  searchParams: Promise<{
+    // Base64 encoded string, containing the data required
+    created?: string;
+  }>;
+}) {
+  const searchParams = React.use(searchParamsPromise);
+
   const [tabIndex, setTabIndex] = useState<number>(0);
+  const createModalParam = useEncodedSearchParam(
+    "created",
+    shortenedModalDataSchema.parse,
+  );
+
+  const modalData = useMemo(
+    () => createModalParam.resolve(new URLSearchParams(searchParams)),
+    [searchParams.created],
+  );
 
   return (
-    <section className="flex flex-col justify-center items-center gap-16 mx-auto min-h-screen">
-      <h2 className="font-bold text-2xl text-white">
-        Shorten an URL. Securely.
-      </h2>
+    <>
+      <section className="flex flex-col justify-center items-center gap-16 mx-auto min-h-screen">
+        <h2 className="font-bold text-2xl text-white">aparx' url shortener</h2>
 
-      <div className="flex flex-col flex-shrink gap-4 border-neutral-800 bg-black p-4 border rounded-lg max-w-[min(375px,calc(100vw-1rem))]">
-        <TabGroup
-          className="mx-auto"
-          tabs={tabs.map((x) => x.name)}
-          onTabUpdate={setTabIndex}
-          defaultTab={0}
+        <div className="flex flex-col flex-shrink gap-4 border-neutral-800 bg-black p-4 border rounded-lg max-w-[min(375px,calc(100vw-1rem))]">
+          <TabGroup
+            className="mx-auto"
+            tabs={tabs.map((x) => x.name)}
+            onTabUpdate={setTabIndex}
+            defaultTab={0}
+          />
+          <ShortenUrlForm
+            tabIndex={tabIndex}
+            tabs={tabs}
+            onStateChange={(state) => {
+              if (state?.state !== "success") return;
+              if (!state.fields?.endpoint) throw new Error("Missing endpoint");
+              const url = new URL(state.fields.endpoint);
+              createModalParam.push({
+                path: state.path,
+                endpointHostname: url.hostname,
+                endpointProtocol: url.protocol,
+                hasPassword: !!state.fields?.password?.trim(),
+                hasExpiration: !!state.fields?.expireIn,
+                hasOnce: !!state.fields?.once,
+              });
+            }}
+          />
+        </div>
+      </section>
+      {modalData && (
+        <ShortenedUrlModal
+          {...modalData}
+          onOpenChange={(v) => !v && createModalParam.remove()}
         />
-        <ShortenUrlForm tabIndex={tabIndex} tabs={tabs} />
-      </div>
-    </section>
+      )}
+    </>
   );
 }
 

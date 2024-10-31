@@ -24,20 +24,26 @@ export interface ShortenUrlFormProps extends ShortenUrlFormBaseProps {
   tabs: ReadonlyArray<ShortenUrlFormTab>;
   /** The currently active tab index */
   tabIndex: number;
+  onStateChange?: (state: ShortenUrlFormState["state"]) => void;
 }
 
 export function ShortenUrlForm({
   tabs,
   tabIndex,
   className,
+  onStateChange,
   ...restProps
 }: ShortenUrlFormProps) {
   const [state, submit] = useFormState(shortenUrl, undefined);
 
+  useEffect(() => {
+    onStateChange?.(state);
+  }, [state]);
+
   return (
     <form
       action={submit}
-      className={twMerge("flex flex-col gap-4 overflow-hidden", className)}
+      className={twMerge("flex flex-col gap-3 overflow-hidden", className)}
       {...restProps}
     >
       <div
@@ -53,7 +59,7 @@ export function ShortenUrlForm({
           </TabPageContainer>
         ))}
       </div>
-      <div className="flex gap-4">
+      <div className="flex gap-[inherit]">
         <button
           type="button"
           className="flex-1 border-neutral-800 bg-neutral-950 p-2 border rounded text-neutral-300"

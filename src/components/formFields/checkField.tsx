@@ -16,8 +16,6 @@ type CheckFieldBaseProps = Pick<
 >;
 
 export interface CheckFieldProps extends CheckFieldBaseProps {
-  checked?: boolean;
-  defaultChecked?: boolean;
   onChange?: ChangeEventHandler<HTMLInputElement>;
   className?: string;
   label: string;

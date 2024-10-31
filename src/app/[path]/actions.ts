@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 const visitWithPasswordInputSchema = z.object({
-  path: z.string().cuid2(),
+  path: z.string(),
   password: z.string(),
 });
 
