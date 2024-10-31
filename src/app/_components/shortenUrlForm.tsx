@@ -11,6 +11,7 @@ import React, {
   useRef,
 } from "react";
 import { GrLinkNext } from "react-icons/gr";
+import { ImSpinner7 } from "react-icons/im";
 import { twMerge } from "tailwind-merge";
 import { shortenUrl } from "../actions";
 
@@ -42,7 +43,7 @@ export function ShortenUrlForm({
   onStateChange,
   ...restProps
 }: ShortenUrlFormProps) {
-  const [state, submit] = useActionState(shortenUrl, undefined);
+  const [state, submit, isPending] = useActionState(shortenUrl, undefined);
 
   useEffect(() => {
     onStateChange?.(state);
@@ -68,9 +69,13 @@ export function ShortenUrlForm({
         ))}
       </div>
       <div className="flex gap-3 mt-3">
-        <Button className="flex-1" color="cta">
+        <Button className="flex-1" color="cta" disabled={isPending}>
           Shorten URL
-          <GrLinkNext className="sm:block hidden" />
+          {isPending ? (
+            <ImSpinner7 className="animate-spin" />
+          ) : (
+            <GrLinkNext className="sm:block hidden" />
+          )}
         </Button>
       </div>
     </form>
