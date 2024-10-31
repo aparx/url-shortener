@@ -4,8 +4,12 @@ import {
   createTabGroupPanelId,
   createTabGroupTabId,
 } from "@/components";
-import React, { ComponentPropsWithoutRef, useEffect, useRef } from "react";
-import { useFormState } from "react-dom";
+import React, {
+  ComponentPropsWithoutRef,
+  useActionState,
+  useEffect,
+  useRef,
+} from "react";
 import { GrLinkNext } from "react-icons/gr";
 import { twMerge } from "tailwind-merge";
 import { shortenUrl } from "../actions";
@@ -38,7 +42,7 @@ export function ShortenUrlForm({
   onStateChange,
   ...restProps
 }: ShortenUrlFormProps) {
-  const [state, submit] = useFormState(shortenUrl, undefined);
+  const [state, submit] = useActionState(shortenUrl, undefined);
 
   useEffect(() => {
     onStateChange?.(state);

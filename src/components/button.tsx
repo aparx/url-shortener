@@ -1,3 +1,4 @@
+import { Slot } from "@radix-ui/react-slot";
 import { ComponentPropsWithoutRef, forwardRef } from "react";
 import { twMerge } from "tailwind-merge";
 
@@ -5,6 +6,7 @@ export type ButtonRef = HTMLButtonElement;
 
 export interface ButtonBaseProps extends ComponentPropsWithoutRef<"button"> {
   color?: keyof typeof colorMap;
+  asChild?: boolean;
 }
 
 const colorMap = {
@@ -15,10 +17,16 @@ const colorMap = {
 
 export const Button = forwardRef<ButtonRef, ButtonBaseProps>(
   function Button(props, ref) {
-    const { className, children, color = "default", ...restProps } = props;
-
+    const {
+      className,
+      children,
+      color = "default",
+      asChild,
+      ...restProps
+    } = props;
+    const Component = asChild ? Slot : "button";
     return (
-      <button
+      <Component
         ref={ref}
         className={twMerge(
           `relative after:absolute after:inset-0 flex justify-center items-center gap-2 hover:after:bg-black/[.25] focus-visible:after:bg-black/[.2] disabled:opacity-35 p-2 border rounded after:rounded whitespace-nowrap`,
@@ -28,7 +36,7 @@ export const Button = forwardRef<ButtonRef, ButtonBaseProps>(
         {...restProps}
       >
         {children}
-      </button>
+      </Component>
     );
   },
 );

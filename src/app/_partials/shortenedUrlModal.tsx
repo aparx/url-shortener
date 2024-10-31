@@ -1,3 +1,4 @@
+import { Button } from "@/components";
 import * as Dialog from "@radix-ui/react-dialog";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -88,19 +89,16 @@ export function ShortenedUrlModal({
                 </div>
               </div>
               <div className="gap-3 columns-2">
-                <Link
-                  href={"/"}
-                  className="flex justify-center items-center gap-2 border-neutral-800 bg-neutral-900 p-2 border rounded text-neutral-400"
-                >
-                  Back
-                </Link>
-                <Link
-                  href={`/${path}`}
-                  className="flex justify-center items-center gap-2 border-white bg-neutral-300 p-2 border rounded font-semibold text-black"
-                >
-                  Visit Link
-                  <IoMdArrowForward size="1.25em" />
-                </Link>
+                <Button color="default" asChild>
+                  <Link href={"/"}>Back</Link>
+                </Button>
+
+                <Button color="cta" asChild>
+                  <Link href={`/${path}`}>
+                    Visit Link
+                    <IoMdArrowForward size="1.25em" />
+                  </Link>
+                </Button>
               </div>
             </div>
           </Dialog.Description>
