@@ -1,6 +1,6 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { IoMdArrowForward, IoMdCheckmarkCircleOutline } from "react-icons/io";
 import { MdClose, MdLock, MdLockOpen, MdOutlineCancel } from "react-icons/md";
 import QRCode from "react-qr-code";
@@ -38,6 +38,11 @@ export function ShortenedUrlModal({
 
   // TODO base64 encode the CreateModalData and use URL to show this modal
 
+  useEffect(() => {
+    if (typeof navigator === "undefined") return;
+    navigator.clipboard.writeText(`${process.env.NEXT_PUBLIC_URL}/${path}`);
+  }, []);
+
   return (
     <Dialog.Root
       open={opened}
@@ -64,13 +69,16 @@ export function ShortenedUrlModal({
                 </div>
               </div>
               <div className="flex gap-6">
-                <PropertyList
-                  items={[
-                    { name: "Protected by password", checked: hasPassword },
-                    { name: "One-Time use only", checked: hasOnce },
-                    { name: "Expires after time", checked: hasExpiration },
-                  ]}
-                />
+                <div className="flex flex-col gap-3">
+                  The link was copied into your clipboard.
+                  <PropertyList
+                    items={[
+                      { name: "Protected by password", checked: hasPassword },
+                      { name: "One-Time use only", checked: hasOnce },
+                      { name: "Expires after time", checked: hasExpiration },
+                    ]}
+                  />
+                </div>
                 <div className="bg-white p-1 max-w-36">
                   <QRCode
                     value={`${process.env.NEXT_PUBLIC_URL}/${path}`}

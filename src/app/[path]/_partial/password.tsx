@@ -32,6 +32,7 @@ export function PasswordPage({ path }: { path: string }) {
           error={
             state?.code === "wrong-password" ? "Wrong password" : undefined
           }
+          required
         />
         <div className="flex gap-[inherit] w-full">
           <button
