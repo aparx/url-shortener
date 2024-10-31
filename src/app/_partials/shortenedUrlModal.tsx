@@ -61,7 +61,7 @@ export function ShortenedUrlModal({
             </Dialog.Close>
           </Dialog.Title>
           <Dialog.Description asChild>
-            <div className="flex flex-col gap-4 text-neutral-400">
+            <div className="space-y-4 text-neutral-400">
               <div className="flex items-center gap-2 border-neutral-800 bg-neutral-900 p-1 border rounded-lg">
                 <Protocol value={endpointProtocol} />
                 <div>
@@ -69,9 +69,9 @@ export function ShortenedUrlModal({
                 </div>
               </div>
               <div className="flex gap-6">
-                <div className="flex flex-col gap-3">
-                  The link was copied into your clipboard.
-                  <PropertyList
+                <div className="space-y-3">
+                  <span>The link was copied into your clipboard.</span>
+                  <AttributeList
                     items={[
                       { name: "Protected by password", checked: hasPassword },
                       { name: "One-Time use only", checked: hasOnce },
@@ -125,13 +125,16 @@ function Protocol({ value }: { value: string }) {
   );
 }
 
-function PropertyList({
+function AttributeList({
   items,
 }: {
-  items: ReadonlyArray<{ name: string; checked: boolean | undefined }>;
+  items: ReadonlyArray<{
+    name: string;
+    checked: boolean | undefined;
+  }>;
 }) {
   return (
-    <ul aria-label="Properties" className="flex flex-col gap-2 list-none">
+    <ul aria-label="Attributes" className="flex flex-col gap-2 list-none">
       {items.map(({ name, checked }) => (
         <li
           data-active={checked}

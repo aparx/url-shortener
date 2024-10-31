@@ -13,7 +13,7 @@ const config: Config = {
           "0%": {
             transform: "translate(-52%, -52%)",
             opacity: "0",
-            scale: "0.96"
+            scale: "0.96",
           },
           "100%": {
             transform: "translate(-50%, -50%)",

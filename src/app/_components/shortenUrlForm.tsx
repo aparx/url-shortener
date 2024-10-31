@@ -1,5 +1,9 @@
 "use client";
-import { createTabGroupPanelId, createTabGroupTabId } from "@/components";
+import {
+  Button,
+  createTabGroupPanelId,
+  createTabGroupTabId,
+} from "@/components";
 import React, { ComponentPropsWithoutRef, useEffect, useRef } from "react";
 import { useFormState } from "react-dom";
 import { GrLinkNext } from "react-icons/gr";
@@ -43,7 +47,7 @@ export function ShortenUrlForm({
   return (
     <form
       action={submit}
-      className={twMerge("flex flex-col gap-3 overflow-hidden", className)}
+      className={twMerge("overflow-hidden", className)}
       {...restProps}
     >
       <div
@@ -59,17 +63,11 @@ export function ShortenUrlForm({
           </TabPageContainer>
         ))}
       </div>
-      <div className="flex gap-[inherit]">
-        <button
-          type="button"
-          className="flex-1 border-neutral-800 bg-neutral-950 p-2 border rounded text-neutral-300"
-        >
-          Reset
-        </button>
-        <button className="flex flex-1 justify-center items-center gap-2 bg-neutral-300 disabled:opacity-35 p-2 border rounded font-semibold text-black whitespace-nowrap">
+      <div className="flex gap-3 mt-3">
+        <Button className="flex-1" color="cta">
           Shorten URL
           <GrLinkNext className="sm:block hidden" />
-        </button>
+        </Button>
       </div>
     </form>
   );
@@ -99,7 +97,7 @@ function TabPageContainer({
       ref={ref}
       aria-hidden={!active}
       aria-labelledby={createTabGroupTabId(name)}
-      className="flex flex-col flex-shrink-0 gap-3 w-full"
+      className="flex-shrink-0 space-y-3 w-full"
     >
       {children}
     </div>
