@@ -47,12 +47,10 @@ export function TabGroup({
             className="relative flex items-center gap-2 px-2 py-1.5 rounded text-neutral-500 hover:text-neutral-600 focus-visible:text-neutral-600 data-[active='true']:text-sky-300 transition-colors"
             role="tab"
             aria-controls={createTabGroupPanelId(tab)}
-            onClick={() =>
-              setActive((oldTab) => {
-                onTabUpdate?.(index, oldTab);
-                return index;
-              })
-            }
+            onClick={() => {
+              setActive(index);
+              onTabUpdate?.(index, activeId);
+            }}
           >
             {tab}
             {activeId === index && (
