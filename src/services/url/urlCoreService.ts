@@ -61,6 +61,7 @@ export class DefaultUrlCoreService implements UrlCoreService {
   }
 
   async matchesPassword(path: string, password: string): Promise<boolean> {
+    if (password == null) throw new Error("Password may not be null");
     const [result] = await this.database
       .select({
         hash: urlsTable.hashedPassword,
@@ -83,6 +84,7 @@ export class DefaultUrlCoreService implements UrlCoreService {
       password && seedBuffer
         ? this.crypto.hashPassword(password, seedBuffer)
         : undefined;
+    console.log("insert", Math.round(Date.now() + (expireIn ?? 0) * 1000 * 60));
     const expiration =
       expireIn && Math.floor(expireIn) > 0
         ? new Date(Math.round(Date.now() + expireIn * 1000 * 60))

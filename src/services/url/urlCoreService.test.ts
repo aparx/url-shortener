@@ -155,5 +155,80 @@ function doTest(service: UrlCoreService) {
         }),
       );
     });
+
+    test("ensure expiration is set correctly", async () => {
+      // Note (*for threshold of 1000 below):
+      // Since the expiration is always in minutes, ignore marginal differences
+      // in seconds. This also comes down to what type of column is used.
+      // By current implementation, milliseconds can be ignored or rounded when
+      // stored in the database. Use `timestamp_ms` if accuracy becomes important.
+      const dateBefore = Date.now();
+      const [{ expiration }] = await insertAndRetrieve({
+        endpoint: "http://localhost:3000",
+        expireIn: 30 /* 30 minutes */,
+      });
+      const dateNow = Date.now();
+      const expireInMs = 30 * 60 * 1000;
+      expect(expiration?.getTime()).toBeGreaterThanOrEqual(
+        dateBefore + expireInMs - 1000 /* threshold */,
+      );
+      expect(expiration?.getTime()).toBeLessThanOrEqual(
+        dateNow + expireInMs + 1000 /* threshold */,
+      );
+      // TODO test edge case: 0 > expireIn
+    });
+  });
+
+  describe("#matchesPassword", () => {
+    async function insertPassword(plainPassword: string) {
+      const seed = service.crypto.generateSeed();
+      const [result] = await service.database
+        .insert(urlsTable)
+        .values({
+          encryptedEndpoint: "sample-clear-endpoint",
+          cryptoSeed: seed.toString(service.crypto.encoding),
+          hashedPassword: service.crypto.hashPassword(plainPassword, seed),
+        })
+        .returning({
+          path: urlsTable.path,
+          hashedPassword: urlsTable.hashedPassword,
+        });
+      // Ensure value has been inserted
+      expect(result).toStrictEqual({
+        path: expect.any(String),
+        // If this fails: the `hashPassword` fn MUST BE deterministic
+        hashedPassword: service.crypto.hashPassword(plainPassword, seed),
+      });
+      return result;
+    }
+
+    test("ensure two equal passwords are matching and others do not", async () => {
+      const value = await insertPassword("password");
+      expect(await service.matchesPassword(value.path, "password")).toBe(true);
+      expect(await service.matchesPassword(value.path, "passworD")).toBe(false);
+      expect(await service.matchesPassword(value.path, "PASSWORD")).toBe(false);
+      expect(
+        await service.matchesPassword(value.path, value.hashedPassword!),
+      ).toBe(false);
+    });
+
+    test("ensure equal passwords with special characters", async () => {
+      const value = await insertPassword('@8946kf"!äö*-~ `_:;');
+      expect(
+        await service.matchesPassword(value.path, '@8946kf"!äö*-~ `_:;'),
+      ).toBe(true);
+      expect(
+        await service.matchesPassword(value.path, '@8046kf"!äö*-~ `_:;'),
+      ).toBe(false);
+      expect(
+        await service.matchesPassword(value.path, '@8946k"f!äö*-~` -:;'),
+      ).toBe(false);
+      expect(
+        await service.matchesPassword(value.path, '@8946kf"!Äö*-~` -:;'),
+      ).toBe(false);
+      expect(
+        await service.matchesPassword(value.path, '@8946kf"!ÄÖ*-~` -:;'),
+      ).toBe(false);
+    });
   });
 }
