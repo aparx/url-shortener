@@ -27,6 +27,14 @@ export interface UrlCryptography {
   generateSeed(): Buffer;
 }
 
+interface DefaultUrlCryptoConstructorArgs {
+  encoding?: BufferEncoding;
+  /** Size of `key` in bytes (used for hashing and encryption) */
+  keySize?: 8 | 16 | 32;
+  key?: string | Buffer;
+  hash?: DefaultUrlCrypto["hash"];
+}
+
 export class DefaultUrlCrypto implements UrlCryptography {
   /** This value is defined by the AES CBC block size of 16 bytes */
   public static readonly SEED_LENGTH = 16;
@@ -37,23 +45,18 @@ export class DefaultUrlCrypto implements UrlCryptography {
 
   private readonly hash: (clear: string, salt: Buffer) => Buffer;
 
+  constructor(args?: DefaultUrlCryptoConstructorArgs);
   constructor({
-    key,
     encoding = "base64",
-    keySize = 256,
-    hash = (clear, salt) =>
-      pbkdf2Sync(clear, salt, 10000, keySize / 8, "sha512"),
-  }: {
-    key: string | Buffer;
-    encoding?: BufferEncoding;
-    keySize?: 128 | 192 | 256;
-    hash?: (clear: string, salt: Buffer) => Buffer;
-  }) {
+    keySize = 32,
+    key = randomBytes(keySize),
+    hash = (clear, salt) => pbkdf2Sync(clear, salt, 10000, keySize, "sha512"),
+  }: DefaultUrlCryptoConstructorArgs) {
     this.key = typeof key === "string" ? Buffer.from(key, encoding) : key;
-    if (this.key.length !== keySize / 8 /* BYTE_LENGTH */)
-      throw new Error(`Key must be ${keySize / 8} bytes`);
+    if (this.key.length !== keySize /* BYTE_LENGTH */)
+      throw new Error(`Key must be ${keySize} bytes`);
     this.encoding = encoding;
-    this.algorithm = `aes-${keySize}-cbc`;
+    this.algorithm = `aes-${8 * keySize}-cbc`;
     this.hash = hash;
   }
 

@@ -16,9 +16,7 @@ describe("DefaultUrlCrypto", () => {
   });
 
   describe("with randomly generated key (check for determinism)", () => {
-    function createCrypto() {
-      return new DefaultUrlCrypto({ key: randomBytes(32) });
-    }
+    const createCrypto = () => new DefaultUrlCrypto();
 
     describe("#encryptUrl", () => {
       const crypto = createCrypto();
