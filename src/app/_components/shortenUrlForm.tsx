@@ -68,7 +68,7 @@ export function ShortenUrlForm({
           </TabPageContainer>
         ))}
       </div>
-      <div className="flex gap-3 mt-3">
+      <div className="flex gap-3 mt-5">
         <Button className="flex-1" color="cta" disabled={isPending}>
           Shorten URL
           {isPending ? (
@@ -106,7 +106,7 @@ function TabPageContainer({
       ref={ref}
       aria-hidden={!active}
       aria-labelledby={createTabGroupTabId(name)}
-      className="flex-shrink-0 space-y-3 w-full"
+      className="flex-shrink-0 space-y-5 w-full"
     >
       {children}
     </div>

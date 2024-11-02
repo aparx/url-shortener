@@ -73,7 +73,7 @@ export default function Home({
       <section className="flex flex-col justify-center items-center gap-16 mx-auto min-h-screen">
         <h2 className="font-bold text-2xl text-white">aparx' url shortener</h2>
 
-        <div className="flex flex-col flex-shrink gap-3 border-neutral-800 bg-black p-5 border rounded-lg max-w-[min(375px,calc(100vw-1rem))]">
+        <div className="flex flex-col flex-shrink gap-5 border-neutral-800 bg-black p-5 border rounded-lg max-w-[min(375px,calc(100vw-1rem))]">
           <TabGroup
             className="mx-auto"
             tabs={tabs.map((x) => x.name)}
