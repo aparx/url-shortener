@@ -24,10 +24,10 @@ afterEach(async () => {
 
 describe("Full integration tests: DefaultUrlCoreService & DefaultUrlCrypto", () => {
   const key = randomBytes(32).toString("base64");
-  doTest(new DefaultUrlCoreService(db, new DefaultUrlCrypto({ key })));
+  testService(new DefaultUrlCoreService(db, new DefaultUrlCrypto({ key })));
 });
 
-function doTest(service: UrlCoreService) {
+function testService(service: UrlCoreService) {
   describe("#resolve", () => {
     test("ensure null is returned, due to unknown path", async () => {
       expect(await service.resolve("sample-path")).toBeNull();
