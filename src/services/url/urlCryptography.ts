@@ -45,7 +45,7 @@ export class DefaultUrlCrypto implements UrlCryptography {
   }: {
     encoding?: BufferEncoding;
     /** Size of `key` in bytes (used for hashing and encryption) */
-    keySize?: 8 | 16 | 32;
+    keySize?: 16 | 24 | 32;
     key?: string | Buffer;
     hash?: DefaultUrlCrypto["hash"];
   } = {}) {
