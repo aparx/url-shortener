@@ -11,10 +11,15 @@ This shortener was realised with NextJS 15, Drizzle (SQLite/Turso) & Tailwind CS
 ### Encryption and hashing (`UrlCryptography`)
 The default encryption standard used for URL encryption is _AES-256-CBC_, with a random 16 byte long seed as the initialization vector generated through the `UrlCryptography` interface. The default hashing algorithm for passwords is _pbkdf_ with SHA-512, the same seed used as the IV for URL encryption and decryption is used as the salt. The seed is simply stored alongside the shortened URL data (same row) in the database. **The seed (i.e. salt & iv) is unique to each shortened URL (row).**
 
+### Visit tracking (`UrlVisitService`)
+Each shortened link tracks how often it has been decrypted - or for that matter, how often it has been visited. This action is done within the backend services, such as `UrlVisitService`. Theroetically, a user does not have to visit the endpoint in order for the visit counter to increment: the decryption alone is counted as a visit. The reasoning behind this is, that a user - as soon as they receive the endpoint as plaintext - can visit it themselves without using the shortener as redirection tool. 
+<br /><br />_Future iterations may expand on this, to provide more analytics: such as total redirects, device types, access locations, and more._
+
 ### Accessibility & responsiveness
 The entire application is built with accessibility and responsiveness in mind. Tho, in the current implementation this mindset is not entirely matured nor tested yet. Expect future updates to correctly validate that behaviour.
 
-<br/>Following dependencies also have had an impact:
+### Dependencies
+Following dependencies also have had an impact:
 - [`framer-motion`](https://www.npmjs.com/package/framer-motion), [`react-qr-code`](https://www.npmjs.com/package/react-qr-code), [`react-icons`](https://www.npmjs.com/package/react-icons), [`@radix-ui/*`](https://www.npmjs.com/search?q=%40radix-ui), [`@paralleldrive/cuid2`](https://www.npmjs.com/package/@paralleldrive/cuid2), ...
 
 ## Environment variables
