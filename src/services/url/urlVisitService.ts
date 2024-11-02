@@ -1,6 +1,5 @@
 import { urlsTable } from "@/db";
 import { eq, sql } from "drizzle-orm";
-import "server-only";
 import { UrlCoreService } from "./urlCoreService";
 
 type VisitAttemptResultErrorCode =

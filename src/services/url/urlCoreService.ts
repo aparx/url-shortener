@@ -1,7 +1,6 @@
 import { urlsTable } from "@/db";
 import { eq, getTableColumns, InferSelectModel, sql } from "drizzle-orm";
 import { LibSQLDatabase } from "drizzle-orm/libsql";
-import "server-only";
 import { UrlCryptography } from "./urlCryptography";
 import { ShortenUrlData } from "./urlSchema";
 
@@ -17,7 +16,7 @@ export type ShortenedUrl = Omit<
 > & { hasPassword?: boolean };
 
 export interface UrlCoreService {
-  readonly database: LibSQLDatabase;
+  readonly database: LibSQLDatabase<any>;
   readonly crypto: UrlCryptography;
 
   /**
@@ -38,7 +37,7 @@ export interface UrlCoreService {
 
 export class DefaultUrlCoreService implements UrlCoreService {
   constructor(
-    readonly database: LibSQLDatabase,
+    readonly database: LibSQLDatabase<any>,
     readonly crypto: UrlCryptography,
   ) {}
 
@@ -77,6 +76,7 @@ export class DefaultUrlCoreService implements UrlCoreService {
 
   async shortenUrl(data: ShortenUrlData): Promise<string> {
     const { endpoint, password, expireIn, ...restData } = data;
+    if (endpoint == null) throw new Error("Endpoint cannot be null");
     const seedBuffer = this.crypto.generateSeed();
     const encryptedEndpoint = this.crypto.encryptUrl(endpoint, seedBuffer);
     const hashedPassword =
