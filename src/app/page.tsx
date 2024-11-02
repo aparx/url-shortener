@@ -71,9 +71,9 @@ export default function Home({
   return (
     <>
       <section className="flex flex-col justify-center items-center gap-16 mx-auto min-h-screen">
-        <h2 className="font-bold text-2xl text-white">aparx' url shortener</h2>
+        <h2 className="font-bold text-2xl text-white">URL shortener</h2>
 
-        <div className="flex flex-col flex-shrink gap-3 border-neutral-800 bg-black p-5 border rounded-lg max-w-[min(375px,calc(100vw-1rem))]">
+        <div className="flex flex-col flex-shrink gap-5 border-neutral-800 bg-black p-5 border rounded-lg max-w-[min(375px,calc(100vw-1rem))]">
           <TabGroup
             className="mx-auto"
             tabs={tabs.map((x) => x.name)}
@@ -110,6 +110,9 @@ export default function Home({
 }
 
 function EssentialPage({ state }: ShortenUrlFormState) {
+  const status = state?.state;
+  const fields = state?.fields;
+
   return (
     <>
       <TextField
@@ -118,16 +121,16 @@ function EssentialPage({ state }: ShortenUrlFormState) {
         placeholder="https://aparx.dev"
         leading={<MdLink size="1.25em" className="text-neutral-600" />}
         error={state?.state === "error" ? state.error.endpoint : undefined}
-        defaultValue={state?.fields?.endpoint || undefined}
+        defaultValue={(status === "error" && fields?.endpoint) || undefined}
         required
       />
       <TextField
         name="path"
-        label="Custom Alias (optional)"
+        label="Slug (optional)"
         placeholder="hello-world"
         leading={<MdTag size="1.25em" className="text-neutral-600" />}
-        error={state?.state === "error" ? state.error.path : undefined}
-        defaultValue={state?.fields?.path || undefined}
+        error={status === "error" ? state?.error.path : undefined}
+        defaultValue={(status === "error" && fields?.path) || undefined}
         maxLength={32}
         pattern={/^[a-zA-Z0-9_-]$/.source}
         onChange={(e) => {
@@ -142,6 +145,9 @@ function EssentialPage({ state }: ShortenUrlFormState) {
 }
 
 function SecurityPage({ state }: ShortenUrlFormState) {
+  const status = state?.state;
+  const fields = state?.fields;
+
   return (
     <>
       <PassField
@@ -150,7 +156,7 @@ function SecurityPage({ state }: ShortenUrlFormState) {
         placeholder="Password"
         leading={<MdPassword size="1.25em" className="text-neutral-600" />}
         error={state?.state === "error" ? state.error.password : undefined}
-        defaultValue={state?.fields?.password || undefined}
+        defaultValue={(status === "error" && fields?.password) || undefined}
       />
       <CheckField label="One-Time use only" name="once" />
     </>
@@ -187,7 +193,7 @@ function ExpirationPage({ state }: ShortenUrlFormState) {
             aria-label={item.text}
             className="peer sr-only"
             defaultChecked={
-              state?.fields?.expireIn
+              state?.state === "error" && state?.fields?.expireIn
                 ? state.fields.expireIn === item.mins
                 : !item.mins
             }

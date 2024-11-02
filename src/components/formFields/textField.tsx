@@ -56,7 +56,7 @@ export const TextField = forwardRef<TextFieldRef, TextFieldProps>(
     return (
       <div className="flex flex-col gap-1">
         {label && (
-          <span className="relative w-fit">
+          <span className="relative w-fit font-semibold">
             {label}
             {inputProps.required && (
               <div className="-top-1 left-full absolute ml-0.5 text-lg text-sky-300">
