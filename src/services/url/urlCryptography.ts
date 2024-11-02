@@ -23,31 +23,43 @@ export interface UrlCryptography {
 
   hashPassword(password: string, seed: Buffer): string;
 
+  /** Generates a random buffer used for salt and IV */
   generateSeed(): Buffer;
 }
 
 export class DefaultUrlCrypto implements UrlCryptography {
+  /** This value is defined by the AES CBC block size of 16 bytes */
+  public static readonly SEED_LENGTH = 16;
+
   readonly key: Buffer;
   readonly encoding: BufferEncoding;
   readonly algorithm: string;
+
+  private readonly hash: (clear: string, salt: Buffer) => Buffer;
 
   constructor({
     key,
     encoding = "base64",
     keySize = 256,
+    hash = (clear, salt) =>
+      pbkdf2Sync(clear, salt, 10000, keySize / 8, "sha512"),
   }: {
     key: string | Buffer;
     encoding?: BufferEncoding;
     keySize?: 128 | 192 | 256;
+    hash?: (clear: string, salt: Buffer) => Buffer;
   }) {
     this.key = typeof key === "string" ? Buffer.from(key, encoding) : key;
     if (this.key.length !== keySize / 8 /* BYTE_LENGTH */)
-      throw new Error(`Length of key must be equal to ${keySize / 8} bytes`);
+      throw new Error(`Key must be ${keySize / 8} bytes`);
     this.encoding = encoding;
     this.algorithm = `aes-${keySize}-cbc`;
+    this.hash = hash;
   }
 
   encryptUrl(plainUrl: string, iv: Buffer): string {
+    if (iv.length !== DefaultUrlCrypto.SEED_LENGTH)
+      throw new Error(`Vector must be ${DefaultUrlCrypto.SEED_LENGTH} bytes`);
     const cipher = createCipheriv(this.algorithm, this.key, iv);
     let encrypted = cipher.update(plainUrl, "utf8", this.encoding);
     encrypted += cipher.final(this.encoding);
@@ -55,6 +67,8 @@ export class DefaultUrlCrypto implements UrlCryptography {
   }
 
   decryptUrl(encryptedUrl: string, iv: Buffer): string {
+    if (iv.length !== DefaultUrlCrypto.SEED_LENGTH)
+      throw new Error(`Vector must be ${DefaultUrlCrypto.SEED_LENGTH} bytes`);
     const decipher = createDecipheriv(this.algorithm, this.key, iv);
     let decrypted = decipher.update(encryptedUrl, this.encoding, "utf8");
     decrypted += decipher.final("utf8");
@@ -62,10 +76,17 @@ export class DefaultUrlCrypto implements UrlCryptography {
   }
 
   hashPassword(clear: string, salt: Buffer): string {
-    return pbkdf2Sync(clear, salt, 128, 32, "sha512").toString(this.encoding);
+    const minSaltLength = DefaultUrlCrypto.SEED_LENGTH;
+    if (salt.length < minSaltLength)
+      throw new Error(`Salt must be at least ${minSaltLength} bytes long`);
+    return this.hash(clear, salt).toString(this.encoding);
   }
 
+  /**
+   * Generates a random buffer of `SEED_LENGTH` bytes to be used as either
+   * an IV for encryption/decryption or a salt for hashing passwords.
+   */
   generateSeed(): Buffer {
-    return randomBytes(16);
+    return randomBytes(DefaultUrlCrypto.SEED_LENGTH);
   }
 }
