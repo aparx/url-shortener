@@ -1,7 +1,7 @@
 import { describe, expect, test } from "@jest/globals";
 
 import { urlsTable } from "@/db";
-import { testDb } from "@/db/test";
+import { testDb } from "@/db/mock";
 import { eq } from "drizzle-orm";
 import { DefaultUrlCoreService, UrlCoreService } from "./urlCoreService";
 import { DefaultUrlCrypto } from "./urlCryptography";

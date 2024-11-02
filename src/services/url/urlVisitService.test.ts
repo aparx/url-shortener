@@ -1,0 +1,65 @@
+import { urlsTable } from "@/db";
+import { testDb } from "@/db/mock";
+import { describe, expect, test } from "@jest/globals";
+import { eq } from "drizzle-orm";
+import { DefaultUrlCoreService } from "./urlCoreService";
+import { DefaultUrlVisitService, UrlVisitService } from "./urlVisitService";
+
+describe("Full integration tests: DefaultUrlVisitService", () => {
+  testService(new DefaultUrlVisitService(new DefaultUrlCoreService(testDb())));
+});
+
+function testService(service: UrlVisitService) {
+  const { database, crypto } = service.core;
+
+  async function createUrl(password?: string | undefined) {
+    console.log("CREATE URL");
+    const seed = crypto.generateSeed();
+    const [result] = await database
+      .insert(urlsTable)
+      .values({
+        cryptoSeed: seed.toString(crypto.encoding),
+        encryptedEndpoint: crypto.encryptUrl("https://google.com", seed),
+        hashedPassword: password ? crypto.hashPassword(password, seed) : null,
+      })
+      .returning({
+        path: urlsTable.path,
+        encryptedEndpoint: urlsTable.encryptedEndpoint,
+        cryptoSeed: urlsTable.cryptoSeed,
+      });
+    // Check value has been inserted
+    expect(result).toStrictEqual({
+      path: expect.any(String),
+      encryptedEndpoint: expect.any(String),
+      cryptoSeed: expect.any(String),
+    });
+    return result;
+  }
+
+  test("ensure null is returned with unknown path", async () => {
+    expect(await service.logVisitAndDecryptEndpoint("some-path")).toBeNull();
+  });
+
+  test("ensure endpoint is decrypted correctly", async () => {
+    const { path, encryptedEndpoint, cryptoSeed } = await createUrl();
+    const plainEndpoint = await service.logVisitAndDecryptEndpoint(path);
+    expect(plainEndpoint).toBeDefined();
+    const seedBuf = Buffer.from(cryptoSeed, crypto.encoding);
+    expect(plainEndpoint).toBe(crypto.decryptUrl(encryptedEndpoint, seedBuf));
+  });
+
+  test("ensure visit counter is increased by one (sequential)", async () => {
+    const { path } = await createUrl();
+    // Sequential
+    for (let i = 0; i < 10 /* SIMULATION_COUNT */; ) {
+      // For each decryption, expect the visit counter to increase by 1
+      await service.logVisitAndDecryptEndpoint(path);
+      const [result] = await database
+        .select({ visits: urlsTable.visits })
+        .from(urlsTable)
+        .where(eq(urlsTable.path, path));
+      expect(result?.visits).toBeDefined();
+      expect(result.visits).toBe(++i);
+    }
+  });
+}

@@ -6,7 +6,6 @@
 import type { Config } from "jest";
 
 const config: Config = {
-  collectCoverage: true,
   testEnvironment: "node",
   moduleDirectories: ["node_modules", "src"],
   setupFilesAfterEnv: ["./src/db/mock.ts"],

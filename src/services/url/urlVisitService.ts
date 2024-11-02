@@ -13,6 +13,8 @@ type VisitAttemptResult =
   | { state: "success"; code?: never; endpoint: string };
 
 export interface UrlVisitService {
+  readonly core: UrlCoreService;
+
   /**
    * Attempts a visit of `path`, with `password`, if possible and returns a
    * result, further explaining the outcome of the visit.
@@ -69,7 +71,7 @@ export class DefaultUrlVisitService implements UrlVisitService {
     return { state: "success", endpoint };
   }
 
-  async logVisitAndDecryptEndpoint(path: string): Promise<string | null> {
+  logVisitAndDecryptEndpoint(path: string): Promise<string | null> {
     // We use a transaction to rollback the visit counter if an error occurs
     // with decrypting the endpoint, or anything related to that.
     return this.core.database.transaction(async (tx) => {

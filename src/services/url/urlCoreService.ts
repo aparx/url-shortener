@@ -1,7 +1,7 @@
 import { urlsTable } from "@/db";
 import { eq, getTableColumns, InferSelectModel, sql } from "drizzle-orm";
 import { LibSQLDatabase } from "drizzle-orm/libsql";
-import { UrlCryptography } from "./urlCryptography";
+import { DefaultUrlCrypto, UrlCryptography } from "./urlCryptography";
 import { ShortenUrlData } from "./urlSchema";
 
 /**
@@ -38,7 +38,7 @@ export interface UrlCoreService {
 export class DefaultUrlCoreService implements UrlCoreService {
   constructor(
     readonly database: LibSQLDatabase<any>,
-    readonly crypto: UrlCryptography,
+    readonly crypto: UrlCryptography = new DefaultUrlCrypto(),
   ) {}
 
   async resolve(path: string): Promise<ShortenedUrl | null> {
