@@ -48,9 +48,32 @@ function testService(service: UrlVisitService) {
     expect(plainEndpoint).toBe(crypto.decryptUrl(encryptedEndpoint, seedBuf));
   });
 
+  test("ensure visit count is undone when decryption fails", async () => {
+    // In order to provoke an issue with decryption, store invalid seed
+    const ogSeed = crypto.generateSeed();
+    const [result] = await database
+      .insert(urlsTable)
+      .values({
+        cryptoSeed: "<invalid-seed>",
+        encryptedEndpoint: crypto.encryptUrl("https://google.com", ogSeed),
+        visits: 3 /* PRE_LOG_VISITS */,
+      })
+      .returning({
+        path: urlsTable.path,
+      });
+    expect(result).toBeDefined(); // Ensure value is given
+    await expect(
+      async () => await service.logVisitAndDecryptEndpoint(result.path),
+    ).rejects.toThrowError();
+    const [{ visits }] = await database
+      .select({ visits: urlsTable.visits })
+      .from(urlsTable)
+      .where(eq(urlsTable.path, result.path));
+    expect(visits).toBe(3 /* PRE_LOG_VISITS */);
+  });
+
   test("ensure visit counter is increased by one (sequential)", async () => {
     const { path } = await createUrl();
-    // Sequential
     for (let i = 0; i < 10 /* SIMULATION_COUNT */; ) {
       // For each decryption, expect the visit counter to increase by 1
       await service.logVisitAndDecryptEndpoint(path);
@@ -61,5 +84,19 @@ function testService(service: UrlVisitService) {
       expect(result?.visits).toBeDefined();
       expect(result.visits).toBe(++i);
     }
+  });
+
+  test("ensure visit counter is increased by one (parallel)", async () => {
+    const { path } = await createUrl();
+    await Promise.all(
+      Array.from({ length: 10 }, () => {
+        return service.logVisitAndDecryptEndpoint(path);
+      }),
+    );
+    const [result] = await database
+      .select({ visits: urlsTable.visits })
+      .from(urlsTable)
+      .where(eq(urlsTable.path, path));
+    expect(result?.visits).toBe(10);
   });
 }

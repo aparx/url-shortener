@@ -38,8 +38,7 @@ export interface UrlVisitService {
    * Increments the visit counter for the URL with `path` and returns the
    * decrypted endpoint for `path`, or null if there is no URL associated with
    * `path`.
-   * - This function may be a single atomic operation: If the endpoint
-   *   decryption fails, the counter increment is rolled back.
+   * - If the decryption fails, the visit increment is undone (or rolled back).
    * - This function does *not* contain checks for password matching,
    *   maximum visits (e.g. one time use), expiration etc.
    *
@@ -71,24 +70,29 @@ export class DefaultUrlVisitService implements UrlVisitService {
     return { state: "success", endpoint };
   }
 
-  logVisitAndDecryptEndpoint(path: string): Promise<string | null> {
-    // We use a transaction to rollback the visit counter if an error occurs
-    // with decrypting the endpoint, or anything related to that.
-    return this.core.database.transaction(async (tx) => {
-      const [result] = await tx
+  async logVisitAndDecryptEndpoint(path: string): Promise<string | null> {
+    // Increment visits atomically; rollback by decrementing if decryption fails
+    // This avoids transaction locks while ensuring data integrity in concurrent
+    // accesses. This is mainly due to limits with SQLite.
+    const [result] = await this.core.database
+      .update(urlsTable)
+      .set({ visits: sql`${urlsTable.visits} + 1` })
+      .where(eq(urlsTable.path, path))
+      .returning({
+        cryptoSeed: urlsTable.cryptoSeed,
+        encryptedEndpoint: urlsTable.encryptedEndpoint,
+      });
+    if (!result) return null;
+    try {
+      const seedBuf = Buffer.from(result.cryptoSeed, this.core.crypto.encoding);
+      return this.core.crypto.decryptUrl(result.encryptedEndpoint, seedBuf);
+    } catch (error) {
+      // Rollback increment due to fail with decryption
+      await this.core.database
         .update(urlsTable)
-        .set({ visits: sql`${urlsTable.visits} + 1` })
-        .where(eq(urlsTable.path, path))
-        .returning({
-          cryptoSeed: urlsTable.cryptoSeed,
-          encryptedEndpoint: urlsTable.encryptedEndpoint,
-        });
-      if (!result) return null;
-      const seedBuffer = Buffer.from(
-        result.cryptoSeed,
-        this.core.crypto.encoding,
-      );
-      return this.core.crypto.decryptUrl(result.encryptedEndpoint, seedBuffer);
-    });
+        .set({ visits: sql`${urlsTable.visits} - 1` })
+        .where(eq(urlsTable.path, path));
+      throw error; // Rethrow the error for handling upstream
+    }
   }
 }
