@@ -1,30 +1,14 @@
-import { afterEach, beforeAll, describe, expect, test } from "@jest/globals";
-import { randomBytes } from "crypto";
-import { drizzle } from "drizzle-orm/libsql";
+import { describe, expect, test } from "@jest/globals";
 
-import { Database, urlsTable } from "@/db";
-import { createClient } from "@libsql/client/sqlite3";
+import { urlsTable } from "@/db";
+import { testDb } from "@/db/test";
 import { eq } from "drizzle-orm";
-import { migrate } from "drizzle-orm/libsql/migrator";
 import { DefaultUrlCoreService, UrlCoreService } from "./urlCoreService";
 import { DefaultUrlCrypto } from "./urlCryptography";
 import { ShortenUrlData } from "./urlSchema";
 
-const client = createClient({ url: ":memory:" });
-const db = drizzle(client) as Database;
-
-beforeAll(async () => {
-  await migrate(db, { migrationsFolder: "./drizzle/" });
-});
-
-afterEach(async () => {
-  // Clear all data from tables after each test
-  await db.delete(urlsTable).all();
-});
-
 describe("Full integration tests: DefaultUrlCoreService & DefaultUrlCrypto", () => {
-  const key = randomBytes(32).toString("base64");
-  testService(new DefaultUrlCoreService(db, new DefaultUrlCrypto({ key })));
+  testService(new DefaultUrlCoreService(testDb(), new DefaultUrlCrypto()));
 });
 
 function testService(service: UrlCoreService) {
