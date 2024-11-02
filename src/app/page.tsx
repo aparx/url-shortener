@@ -71,7 +71,9 @@ export default function Home({
   return (
     <>
       <section className="flex flex-col justify-center items-center gap-16 mx-auto min-h-screen">
-        <h2 className="font-bold text-2xl text-white">aparx' url shortener</h2>
+        <h2 className="font-bold text-2xl text-white">
+          URL shortener
+          </h2>
 
         <div className="flex flex-col flex-shrink gap-5 border-neutral-800 bg-black p-5 border rounded-lg max-w-[min(375px,calc(100vw-1rem))]">
           <TabGroup
@@ -123,7 +125,7 @@ function EssentialPage({ state }: ShortenUrlFormState) {
       />
       <TextField
         name="path"
-        label="Custom Alias (optional)"
+        label="Slug (optional)"
         placeholder="hello-world"
         leading={<MdTag size="1.25em" className="text-neutral-600" />}
         error={state?.state === "error" ? state.error.path : undefined}
