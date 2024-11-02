@@ -13,7 +13,6 @@ function testService(service: UrlVisitService) {
   const { database, crypto } = service.core;
 
   async function createUrl(password?: string | undefined) {
-    console.log("CREATE URL");
     const seed = crypto.generateSeed();
     const [result] = await database
       .insert(urlsTable)
