@@ -34,15 +34,17 @@ export class DefaultUrlCrypto implements UrlCryptography {
   constructor({
     key,
     encoding = "base64",
-    algorithm = "aes-256-cbc",
+    keySize = 256,
   }: {
     key: string | Buffer;
     encoding?: BufferEncoding;
-    algorithm?: string;
+    keySize?: 128 | 192 | 256;
   }) {
     this.key = typeof key === "string" ? Buffer.from(key, encoding) : key;
+    if (this.key.length !== keySize / 8 /* BYTE_LENGTH */)
+      throw new Error(`Length of key must be equal to ${keySize / 8} bytes`);
     this.encoding = encoding;
-    this.algorithm = algorithm;
+    this.algorithm = `aes-${keySize}-cbc`;
   }
 
   encryptUrl(plainUrl: string, iv: Buffer): string {

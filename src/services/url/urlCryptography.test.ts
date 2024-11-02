@@ -4,20 +4,20 @@ import { describe } from "node:test";
 import { DefaultUrlCrypto } from "./urlCryptography";
 
 describe("DefaultUrlCrypto", () => {
-  test("ensure error with key of different encoding", () => {
+  test("expect error because of wrong key length", () => {
+    expect(() => new DefaultUrlCrypto({ key: randomBytes(8) })).toThrow();
+    expect(() => new DefaultUrlCrypto({ key: randomBytes(64) })).toThrow();
     expect(
-      () => new DefaultUrlCrypto({ key: randomBytes(32).toString("hex") }),
+      () => new DefaultUrlCrypto({ key: randomBytes(9).toString() }),
     ).toThrow();
     expect(
-      () => new DefaultUrlCrypto({ key: randomBytes(32).toString("binary") }),
+      () => new DefaultUrlCrypto({ key: randomBytes(64).toString() }),
     ).toThrow();
   });
 
-  // Base64 encoded key;
   describe("with randomly generated key (check for determinism)", () => {
     function createCrypto() {
-      const key = randomBytes(32).toString("base64");
-      return new DefaultUrlCrypto({ key });
+      return new DefaultUrlCrypto({ key: randomBytes(32) });
     }
 
     describe("#encryptUrl", () => {
@@ -49,9 +49,9 @@ describe("DefaultUrlCrypto", () => {
       });
 
       test("decryption with equal iv and different key does not work", () => {
-        expect(
+        expect(() =>
           crypto.decryptUrl(createCrypto().encryptUrl("foo bar", iv), iv),
-        ).not.toEqual("foo bar");
+        ).toThrow();
       });
 
       test("decryption with unequal iv's and equal key does not work", () => {
@@ -60,9 +60,22 @@ describe("DefaultUrlCrypto", () => {
         expect(iv.toString(crypto.encoding)).not.toEqual(
           newIv.toString(crypto.encoding),
         );
-        expect(
+        expect(() =>
           crypto.decryptUrl(crypto.encryptUrl("foo bar", iv), newIv),
-        ).not.toEqual("foo bar");
+        ).toThrow();
+      });
+    });
+
+    describe("#generateSeed", () => {
+      const crypto = createCrypto();
+      test("expect return not to equal another return", () => {
+        expect(crypto.generateSeed().toString()).not.toEqual(
+          crypto.generateSeed().toString(),
+        );
+      });
+
+      test("expect byte length to be 16 bytes", () => {
+        expect(crypto.generateSeed().length).toEqual(16);
       });
     });
   });
