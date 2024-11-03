@@ -1,4 +1,5 @@
 "use client";
+import { PageContainer } from "@/app/_components/pageContainer";
 import { Button, PassField, PassFieldRef } from "@/components";
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useRef } from "react";
@@ -21,12 +22,12 @@ export function PasswordPage({ path }: { path: string }) {
   }, []);
 
   return (
-    <div className="space-y-5 border-neutral-800 bg-black p-5 border rounded-lg">
-      <h3 className="flex items-center gap-2 font-semibold text-lg">
+    <PageContainer.Root>
+      <PageContainer.Title>
         <MdLock />
         This link is protected by a password
-      </h3>
-      <form action={submit} className="space-y-3">
+      </PageContainer.Title>
+      <form action={submit} className="flex flex-col gap-3">
         <input type="hidden" name="path" value={path} />
         <PassField
           ref={fieldRef}
@@ -57,6 +58,6 @@ export function PasswordPage({ path }: { path: string }) {
           </Button>
         </div>
       </form>
-    </div>
+    </PageContainer.Root>
   );
 }

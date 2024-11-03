@@ -4,6 +4,7 @@ import { useEncodedSearchParam } from "@/hooks/useEncodedSearchParam";
 import { useRouter } from "next/navigation";
 import React, { memo, useMemo, useState } from "react";
 import { MdLink, MdPassword, MdTag } from "react-icons/md";
+import { PageContainer } from "./_components/pageContainer";
 import {
   ShortenUrlForm,
   ShortenUrlFormState,
@@ -69,43 +70,37 @@ export default function Home({
   );
 
   return (
-    <>
-      <section className="flex flex-col justify-center items-center gap-16 mx-auto min-h-screen">
-        <h2 className="font-bold text-2xl text-white">URL shortener</h2>
-
-        <div className="flex flex-col flex-shrink gap-5 border-neutral-800 bg-black p-5 border rounded-lg max-w-[min(375px,calc(100vw-1rem))]">
-          <TabGroup
-            className="mx-auto"
-            tabs={tabs.map((x) => x.name)}
-            onTabUpdate={setTabIndex}
-            defaultTab={0}
-          />
-          <ShortenUrlForm
-            tabIndex={tabIndex}
-            tabs={tabs}
-            onStateChange={(state) => {
-              if (state?.state !== "success") return;
-              if (!state.fields?.endpoint) throw new Error("Missing endpoint");
-              const url = new URL(state.fields.endpoint);
-              createModalParam.push({
-                path: state.path,
-                endpointHostname: url.hostname,
-                endpointProtocol: url.protocol,
-                hasPassword: !!state.fields?.password?.trim(),
-                hasExpiration: !!state.fields?.expireIn,
-                hasOnce: !!state.fields?.once,
-              });
-            }}
-          />
-        </div>
-      </section>
+    <PageContainer.Root className="max-w-[min(375px,calc(100vw-1rem))]">
+      <TabGroup
+        className="mx-auto"
+        tabs={tabs.map((x) => x.name)}
+        onTabUpdate={setTabIndex}
+        defaultTab={0}
+      />
+      <ShortenUrlForm
+        tabIndex={tabIndex}
+        tabs={tabs}
+        onStateChange={(state) => {
+          if (state?.state !== "success") return;
+          if (!state.fields?.endpoint) throw new Error("Missing endpoint");
+          const url = new URL(state.fields.endpoint);
+          createModalParam.push({
+            path: state.path,
+            endpointHostname: url.hostname,
+            endpointProtocol: url.protocol,
+            hasPassword: !!state.fields?.password?.trim(),
+            hasExpiration: !!state.fields?.expireIn,
+            hasOnce: !!state.fields?.once,
+          });
+        }}
+      />
       {modalData && (
         <ShortenedUrlModal
           {...modalData}
           onOpenChange={(v) => !v && createModalParam.remove()}
         />
       )}
-    </>
+    </PageContainer.Root>
   );
 }
 
