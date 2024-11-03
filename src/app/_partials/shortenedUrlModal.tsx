@@ -2,8 +2,14 @@ import { Button } from "@/components";
 import * as Dialog from "@radix-ui/react-dialog";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { IoMdArrowForward, IoMdCheckmarkCircleOutline } from "react-icons/io";
-import { MdClose, MdLock, MdLockOpen, MdOutlineCancel } from "react-icons/md";
+import { IoMdArrowForward } from "react-icons/io";
+import {
+  MdClose,
+  MdLock,
+  MdLockClock,
+  MdLockOpen,
+  MdTimer,
+} from "react-icons/md";
 import QRCode from "react-qr-code";
 import { twMerge } from "tailwind-merge";
 import { z } from "zod";
@@ -74,17 +80,30 @@ export function ShortenedUrlModal({
                   <span>The link was copied into your clipboard.</span>
                   <AttributeList
                     items={[
-                      { name: "Protected by password", checked: hasPassword },
-                      { name: "One-Time use only", checked: hasOnce },
-                      { name: "Expires after time", checked: hasExpiration },
+                      {
+                        name: "Protected by password",
+                        checked: hasPassword,
+                        icon: <MdLock />,
+                      },
+                      {
+                        name: "One-Time use only",
+                        checked: hasOnce,
+                        icon: <MdTimer />,
+                      },
+                      {
+                        name: "Expires after time",
+                        checked: hasExpiration,
+                        icon: <MdLockClock />,
+                      },
                     ]}
                   />
                 </div>
-                <div className="bg-white p-1 max-w-36">
+                <div className="border-white bg-neutral-200 p-2 border rounded-lg max-w-36">
                   <QRCode
                     value={`${process.env.NEXT_PUBLIC_URL}/${path}`}
                     size={256}
                     style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                    bgColor="transparent"
                   />
                 </div>
               </div>
@@ -129,25 +148,22 @@ function AttributeList({
   items: ReadonlyArray<{
     name: string;
     checked: boolean | undefined;
+    icon: React.ReactNode;
   }>;
 }) {
   return (
     <ul aria-label="Attributes" className="flex flex-col gap-2 list-none">
-      {items.map(({ name, checked }) => (
+      {items.map(({ name, checked, icon }) => (
         <li
           data-active={checked}
           key={name}
           className="flex items-center gap-2 text-neutral-500 data-[active='true']:text-neutral-300"
         >
-          {checked ? (
-            <div className="inline-block bg-sky-950 p-0.5 rounded-full text-sky-300">
-              <IoMdCheckmarkCircleOutline />
-            </div>
-          ) : (
-            <div className="inline-block bg-neutral-800 p-0.5 rounded-full text-neutral-500">
-              <MdOutlineCancel />
-            </div>
-          )}
+          <div
+            className={`inline-block p-1 rounded-full ${checked ? "bg-sky-950 text-sky-300" : "bg-neutral-800 text-neutral-500"}`}
+          >
+            {icon}
+          </div>
           {name}
           <span className="sr-only">{checked ? "Checked" : "Unchecked"}</span>
         </li>

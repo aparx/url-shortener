@@ -21,7 +21,7 @@ export function PasswordPage({ path }: { path: string }) {
   }, []);
 
   return (
-    <div className="space-y-4 border-neutral-800 bg-black p-5 border rounded-lg">
+    <div className="space-y-5 border-neutral-800 bg-black p-5 border rounded-lg">
       <h3 className="flex items-center gap-2 font-semibold text-lg">
         <MdLock />
         This link is protected by a password
