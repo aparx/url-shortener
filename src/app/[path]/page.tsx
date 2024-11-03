@@ -1,7 +1,7 @@
 import { urlVisitService } from "@/services/config";
+import { redirect } from "next/navigation";
 import { ErrorPage } from "./_partial/error";
 import { PasswordPage } from "./_partial/password";
-import { RedirectWarning } from "./_partial/content";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +17,7 @@ export default async function Page({
     searchParams.password,
   );
   if (result?.state !== "error") {
-    return <RedirectWarning endpoint={result.endpoint} />;
+    return redirect(result.endpoint);
   }
   switch (result.code) {
     case "not-found":

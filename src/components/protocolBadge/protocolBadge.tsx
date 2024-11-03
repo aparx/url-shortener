@@ -13,7 +13,7 @@ export function Secure({
 }: ComponentPropsWithoutRef<"span">) {
   return (
     <span
-      className={twMerge(baseClasses, "bg-green-950 text-green-300")}
+      className={twMerge(baseClasses, "bg-green-950 text-green-300", className)}
       {...restProps}
     >
       <MdLock />
@@ -29,7 +29,7 @@ export function Insecure({
 }: ComponentPropsWithoutRef<"span">) {
   return (
     <span
-      className={twMerge(baseClasses, "bg-red-950 text-red-300")}
+      className={twMerge(baseClasses, "bg-red-950 text-red-300", className)}
       {...restProps}
     >
       <MdLockOpen />

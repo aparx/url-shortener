@@ -1,17 +1,15 @@
 "use client";
 import { CheckField, PassField, TabGroup, TextField } from "@/components";
 import { useEncodedSearchParam } from "@/hooks/useEncodedSearchParam";
-import { useRouter } from "next/navigation";
 import React, { memo, useMemo, useState } from "react";
 import { MdLink, MdPassword, MdTag } from "react-icons/md";
-import { PageContainer } from "./_components/pageContainer";
+import { PageContainer } from "../components/pageContainer";
 import {
   ShortenUrlForm,
   ShortenUrlFormState,
   ShortenUrlFormTab,
 } from "./_components/shortenUrlForm";
 import {
-  ShortenedModalData,
   shortenedModalDataSchema,
   ShortenedUrlModal,
 } from "./_partials/shortenedUrlModal";
@@ -21,32 +19,6 @@ const tabs: Readonly<ShortenUrlFormTab[]> = Object.freeze([
   { name: "Security", page: memo(SecurityPage) },
   { name: "Expiration", page: memo(ExpirationPage) },
 ]);
-
-function usePushModalData(): [
-  push: (data: ShortenedModalData) => void,
-  resolve: (encodedValue: string | undefined) => ShortenedModalData | undefined,
-  close: () => void,
-] {
-  // TODO extract into separate utility hook
-  const router = useRouter();
-  return useMemo(
-    () => [
-      (data: ShortenedModalData) => {
-        const buffer = Buffer.from(JSON.stringify(data), "utf8");
-        const component = encodeURIComponent(buffer.toString("base64"));
-        router.push(`/?created=${component}`);
-      },
-      (encodedValue: string | undefined): ShortenedModalData | undefined => {
-        if (!encodedValue) return undefined;
-        const buffer = Buffer.from(decodeURIComponent(encodedValue), "base64");
-        const jsonObject = JSON.parse(buffer.toString("utf8"));
-        return shortenedModalDataSchema.safeParse(jsonObject)?.data;
-      },
-      () => router.replace(`/`, { scroll: false }),
-    ],
-    [router],
-  );
-}
 
 export default function Home({
   searchParams: searchParamsPromise,

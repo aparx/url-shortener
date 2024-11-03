@@ -6,7 +6,7 @@ import { IoMdArrowForward } from "react-icons/io";
 import { MdClose, MdLock, MdLockClock, MdTimer } from "react-icons/md";
 import QRCode from "react-qr-code";
 import { z } from "zod";
-import { ProtocolBadge } from "../_components/protocolBadge";
+import { ProtocolBadge } from "../../components/protocolBadge";
 
 export interface ShortenedModalProps extends ShortenedModalData {
   onOpenChange?: (isOpened: boolean) => void;
