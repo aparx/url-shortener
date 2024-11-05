@@ -6,9 +6,6 @@ import { DefaultUrlVisitService } from "./url/urlVisitService";
 if (!process.env.URL_ENCRYPTION_KEY)
   throw new Error("Missing in .env: URL_ENCRYPTION_KEY");
 
-if (!process.env.URL_ENDPOINT_HASHING_SALT)
-  throw new Error("Missing in .env: URL_ENDPOINT_HASHING_SALT");
-
 export const urlCrypto = new DefaultUrlCrypto({
   key: process.env.URL_ENCRYPTION_KEY,
 });
