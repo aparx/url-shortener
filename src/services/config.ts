@@ -25,7 +25,6 @@ export const urlCoreService = new DefaultUrlCoreService({
   database: db(),
   crypto: urlCrypto,
   verifier: urlSafetyService,
-  endpointSalt: process.env.URL_ENDPOINT_HASHING_SALT,
 });
 
 export const urlVisitService = new DefaultUrlVisitService(urlCoreService);

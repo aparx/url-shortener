@@ -21,6 +21,7 @@ export interface UrlCryptography {
 
   decryptUrl(encryptedUrl: string, seed: Buffer): string;
 
+  /** Securely hashes `plainString` (e.g. a password) with `seed` as salt */
   hashString(plainString: string, seed: Buffer): string;
 
   /** Generates a random buffer used for salt and IV */
