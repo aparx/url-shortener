@@ -39,7 +39,7 @@ export function useEncodedSearchParam<TData>(
         const encodedValue = searchParams.get(paramKey);
         if (!encodedValue) return undefined;
         const buffer = Buffer.from(decodeURIComponent(encodedValue), "base64");
-        if (!parseRef.current) throw new Error("Impossible useRef error");
+        if (!parseRef.current) throw new Error("Parse callback is undefined");
         return parseRef.current(JSON.parse(buffer.toString("utf8")));
       },
       remove: (baseUrl) => {
