@@ -41,7 +41,7 @@ export function ShortenedUrlModal({
   useEffect(() => {
     if (typeof navigator === "undefined") return;
     navigator.clipboard.writeText(`${process.env.NEXT_PUBLIC_URL}/${path}`);
-  }, []);
+  }, [path]);
 
   return (
     <Dialog.Root

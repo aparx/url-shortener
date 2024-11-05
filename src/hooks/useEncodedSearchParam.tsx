@@ -1,5 +1,5 @@
 import { useRouter } from "next/navigation";
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import { URLSearchParams } from "url";
 import { useCurrentUrl } from "./useCurrentUrl";
 
@@ -23,6 +23,8 @@ export function useEncodedSearchParam<TData>(
 ): UseEncodedSearchParam<TData> {
   const router = useRouter();
   const createCurrentUrl = useCurrentUrl();
+  const parseRef = useRef(parse);
+  parseRef.current = parse;
 
   return useMemo(
     () => ({
@@ -37,7 +39,8 @@ export function useEncodedSearchParam<TData>(
         const encodedValue = searchParams.get(paramKey);
         if (!encodedValue) return undefined;
         const buffer = Buffer.from(decodeURIComponent(encodedValue), "base64");
-        return parse(JSON.parse(buffer.toString("utf8")));
+        if (!parseRef.current) throw new Error("Impossible useRef error");
+        return parseRef.current(JSON.parse(buffer.toString("utf8")));
       },
       remove: (baseUrl) => {
         const currentUrl = createCurrentUrl(baseUrl);
@@ -47,6 +50,6 @@ export function useEncodedSearchParam<TData>(
         return true;
       },
     }),
-    [router, createCurrentUrl],
+    [router, createCurrentUrl, paramKey],
   );
 }

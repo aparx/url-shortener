@@ -18,7 +18,6 @@ describe("Full integration tests: DefaultUrlVisitService", () => {
 
 function testService(service: UrlVisitService) {
   const { database, crypto } = service.core;
-  const endpointSeed = crypto.generateSeed();
 
   async function createUrl(password?: string | undefined) {
     const seed = crypto.generateSeed();

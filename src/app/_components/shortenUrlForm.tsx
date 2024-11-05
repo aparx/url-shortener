@@ -44,9 +44,11 @@ export function ShortenUrlForm({
   ...restProps
 }: ShortenUrlFormProps) {
   const [state, submit, isPending] = useActionState(shortenUrl, undefined);
+  const onStateChangeRef = useRef(onStateChange);
+  onStateChangeRef.current = onStateChange;
 
   useEffect(() => {
-    onStateChange?.(state);
+    onStateChangeRef.current?.(state);
   }, [state]);
 
   return (

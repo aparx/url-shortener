@@ -52,9 +52,7 @@ export function Protocol({
     return protocol.substring(0, terminator);
   }, [protocol]);
 
-  return useMemo(() => {
-    if (!realProtocol.toLowerCase().includes("https"))
-      return <Unsafe {...restProps}>{render(realProtocol, false)}</Unsafe>;
-    return <Safe {...restProps}>{render(realProtocol, true)}</Safe>;
-  }, [realProtocol]);
+  if (!realProtocol.toLowerCase().includes("https"))
+    return <Unsafe {...restProps}>{render(realProtocol, false)}</Unsafe>;
+  return <Safe {...restProps}>{render(realProtocol, true)}</Safe>;
 }

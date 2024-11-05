@@ -1,6 +1,5 @@
-import { urlsTable } from "@/db";
+import { Database, urlsTable } from "@/db";
 import { eq, getTableColumns, InferSelectModel, sql } from "drizzle-orm";
-import { LibSQLDatabase } from "drizzle-orm/libsql";
 import { DefaultUrlCrypto, UrlCryptography } from "./urlCryptography";
 import { UrlSafetyService } from "./urlSafetyService";
 import { ShortenUrlData } from "./urlSchema";
@@ -22,7 +21,7 @@ export interface ShortenUrlResult {
 }
 
 export interface UrlCoreService {
-  readonly database: LibSQLDatabase<any>;
+  readonly database: Database;
   readonly crypto: UrlCryptography;
 
   /**
@@ -42,7 +41,7 @@ export interface UrlCoreService {
 }
 
 export class DefaultUrlCoreService implements UrlCoreService {
-  readonly database: LibSQLDatabase<any>;
+  readonly database: Database;
   readonly crypto: UrlCryptography;
   readonly verifier?: UrlSafetyService;
 
@@ -61,12 +60,14 @@ export class DefaultUrlCoreService implements UrlCoreService {
   }
 
   async resolve(path: string): Promise<ShortenedUrl | null> {
+    /* eslint-disable @typescript-eslint/no-unused-vars */
     const {
       cryptoSeed,
       encryptedEndpoint,
       hashedPassword,
       ...selectTableColumns
     } = getTableColumns(urlsTable);
+    /* eslint-enable @typescript-eslint/no-unused-vars */
     const [result] = await this.database
       .select({
         ...selectTableColumns,
