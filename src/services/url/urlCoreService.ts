@@ -91,7 +91,7 @@ export class DefaultUrlCoreService implements UrlCoreService {
       .limit(1);
     if (!result || !result.salt) return false;
     const saltBuffer = Buffer.from(result.salt, this.crypto.encoding);
-    return this.crypto.hashPassword(password, saltBuffer) === result.hash;
+    return this.crypto.hashString(password, saltBuffer) === result.hash;
   }
 
   async shortenUrl(data: ShortenUrlData): Promise<ShortenUrlResult> {
@@ -101,7 +101,7 @@ export class DefaultUrlCoreService implements UrlCoreService {
     const encryptedEndpoint = this.crypto.encryptUrl(endpoint, seedBuffer);
     const hashedPassword =
       password && seedBuffer
-        ? this.crypto.hashPassword(password, seedBuffer)
+        ? this.crypto.hashString(password, seedBuffer)
         : undefined;
     const expiration =
       expireIn && Math.floor(expireIn) > 0

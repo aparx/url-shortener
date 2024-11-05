@@ -4,10 +4,16 @@ import { urlsTable } from "@/db";
 import { testDb } from "@/db/mock";
 import { eq } from "drizzle-orm";
 import { DefaultUrlCoreService, UrlCoreService } from "./urlCoreService";
+import { DefaultUrlCrypto } from "./urlCryptography";
 import { ShortenUrlData } from "./urlSchema";
 
 describe("Full integration tests: DefaultUrlCoreService & DefaultUrlCrypto", () => {
-  testService(new DefaultUrlCoreService({ database: testDb() }));
+  testService(
+    new DefaultUrlCoreService({
+      database: testDb(),
+      crypto: new DefaultUrlCrypto(),
+    }),
+  );
 });
 
 function testService(service: UrlCoreService) {
@@ -18,12 +24,12 @@ function testService(service: UrlCoreService) {
 
     test("ensure secure fields are omitted and `hasPassword` is true", async () => {
       // Ensure following fields are omitted:
-      // - cryptoSeed, encryptedEndpoint, hashedPassword
+      // - cryptoSeed, encryptedEndpoint, hashedPassword, hashedEndpoint
       const [{ id, path }] = await service.database
         .insert(urlsTable)
         .values({
           cryptoSeed: "<this-should-be-omitted(seed)>",
-          encryptedEndpoint: "<this-should-be-omitted(ep)>",
+          encryptedEndpoint: "<this-should-be-omitted(pep)>",
           hashedPassword: "<this-should-be-omitted(pw)>",
         })
         .returning({
@@ -37,6 +43,7 @@ function testService(service: UrlCoreService) {
         updatedAt: expect.any(Date),
         expiration: null,
         once: false,
+        secure: false,
         disabled: false,
         hasPassword: 1,
         visits: 0,
@@ -48,7 +55,7 @@ function testService(service: UrlCoreService) {
         .insert(urlsTable)
         .values({
           cryptoSeed: "<this-should-be-omitted(seed)>",
-          encryptedEndpoint: "<this-should-be-omitted(ep)>",
+          encryptedEndpoint: "<this-should-be-omitted(pep)>",
         })
         .returning({
           id: urlsTable.id,
@@ -110,7 +117,7 @@ function testService(service: UrlCoreService) {
       expect(result).toEqual(
         expect.objectContaining({
           path: expect.any(String),
-          hashedPassword: service.crypto.hashPassword(
+          hashedPassword: service.crypto.hashString(
             "sample-password",
             seedBuffer,
           ),
@@ -160,58 +167,64 @@ function testService(service: UrlCoreService) {
       );
       // TODO test edge case: 0 > expireIn
     });
-  });
 
-  describe("#matchesPassword", () => {
-    async function insertPassword(plainPassword: string) {
-      const seed = service.crypto.generateSeed();
-      const [result] = await service.database
-        .insert(urlsTable)
-        .values({
-          encryptedEndpoint: "sample-clear-endpoint",
-          cryptoSeed: seed.toString(service.crypto.encoding),
-          hashedPassword: service.crypto.hashPassword(plainPassword, seed),
-        })
-        .returning({
-          path: urlsTable.path,
-          hashedPassword: urlsTable.hashedPassword,
+    describe("#matchesPassword", () => {
+      async function insertPassword(plainPassword: string) {
+        const seed = service.crypto.generateSeed();
+        const [result] = await service.database
+          .insert(urlsTable)
+          .values({
+            encryptedEndpoint: "sample-clear-endpoint",
+            cryptoSeed: seed.toString(service.crypto.encoding),
+            hashedPassword: service.crypto.hashString(plainPassword, seed),
+          })
+          .returning({
+            path: urlsTable.path,
+            hashedPassword: urlsTable.hashedPassword,
+          });
+        // Ensure value has been inserted
+        expect(result).toStrictEqual({
+          path: expect.any(String),
+          // If this fails: the `hashPassword` fn MUST BE deterministic
+          hashedPassword: service.crypto.hashString(plainPassword, seed),
         });
-      // Ensure value has been inserted
-      expect(result).toStrictEqual({
-        path: expect.any(String),
-        // If this fails: the `hashPassword` fn MUST BE deterministic
-        hashedPassword: service.crypto.hashPassword(plainPassword, seed),
+        return result;
+      }
+
+      test("ensure two equal passwords are matching and others do not", async () => {
+        const value = await insertPassword("password");
+        expect(await service.matchesPassword(value.path, "password")).toBe(
+          true,
+        );
+        expect(await service.matchesPassword(value.path, "passworD")).toBe(
+          false,
+        );
+        expect(await service.matchesPassword(value.path, "PASSWORD")).toBe(
+          false,
+        );
+        expect(
+          await service.matchesPassword(value.path, value.hashedPassword!),
+        ).toBe(false);
       });
-      return result;
-    }
 
-    test("ensure two equal passwords are matching and others do not", async () => {
-      const value = await insertPassword("password");
-      expect(await service.matchesPassword(value.path, "password")).toBe(true);
-      expect(await service.matchesPassword(value.path, "passworD")).toBe(false);
-      expect(await service.matchesPassword(value.path, "PASSWORD")).toBe(false);
-      expect(
-        await service.matchesPassword(value.path, value.hashedPassword!),
-      ).toBe(false);
-    });
-
-    test("ensure equal passwords with special characters", async () => {
-      const value = await insertPassword('@8946kf"!äö*-~ `_:;');
-      expect(
-        await service.matchesPassword(value.path, '@8946kf"!äö*-~ `_:;'),
-      ).toBe(true);
-      expect(
-        await service.matchesPassword(value.path, '@8046kf"!äö*-~ `_:;'),
-      ).toBe(false);
-      expect(
-        await service.matchesPassword(value.path, '@8946k"f!äö*-~` -:;'),
-      ).toBe(false);
-      expect(
-        await service.matchesPassword(value.path, '@8946kf"!Äö*-~` -:;'),
-      ).toBe(false);
-      expect(
-        await service.matchesPassword(value.path, '@8946kf"!ÄÖ*-~` -:;'),
-      ).toBe(false);
+      test("ensure equal passwords with special characters", async () => {
+        const value = await insertPassword('@8946kf"!äö*-~ `_:;');
+        expect(
+          await service.matchesPassword(value.path, '@8946kf"!äö*-~ `_:;'),
+        ).toBe(true);
+        expect(
+          await service.matchesPassword(value.path, '@8046kf"!äö*-~ `_:;'),
+        ).toBe(false);
+        expect(
+          await service.matchesPassword(value.path, '@8946k"f!äö*-~` -:;'),
+        ).toBe(false);
+        expect(
+          await service.matchesPassword(value.path, '@8946kf"!Äö*-~` -:;'),
+        ).toBe(false);
+        expect(
+          await service.matchesPassword(value.path, '@8946kf"!ÄÖ*-~` -:;'),
+        ).toBe(false);
+      });
     });
   });
 }

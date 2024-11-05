@@ -1,0 +1,1 @@
+ALTER TABLE `urls_table` ADD `secure` integer DEFAULT false;

@@ -3,15 +3,22 @@ import { testDb } from "@/db/mock";
 import { describe, expect, test } from "@jest/globals";
 import { eq } from "drizzle-orm";
 import { DefaultUrlCoreService } from "./urlCoreService";
+import { DefaultUrlCrypto } from "./urlCryptography";
 import { DefaultUrlVisitService, UrlVisitService } from "./urlVisitService";
 
 describe("Full integration tests: DefaultUrlVisitService", () => {
-  const coreService = new DefaultUrlCoreService({ database: testDb() });
+  const coreService = new DefaultUrlCoreService({
+    database: testDb(),
+    crypto: new DefaultUrlCrypto({
+      key: process.env.URL_ENCRYPTION_KEY!,
+    }),
+  });
   testService(new DefaultUrlVisitService(coreService));
 });
 
 function testService(service: UrlVisitService) {
   const { database, crypto } = service.core;
+  const endpointSeed = crypto.generateSeed();
 
   async function createUrl(password?: string | undefined) {
     const seed = crypto.generateSeed();
@@ -20,7 +27,7 @@ function testService(service: UrlVisitService) {
       .values({
         cryptoSeed: seed.toString(crypto.encoding),
         encryptedEndpoint: crypto.encryptUrl("https://google.com", seed),
-        hashedPassword: password ? crypto.hashPassword(password, seed) : null,
+        hashedPassword: password ? crypto.hashString(password, seed) : null,
       })
       .returning({
         path: urlsTable.path,
@@ -51,6 +58,7 @@ function testService(service: UrlVisitService) {
   test("ensure visit count is undone when decryption fails", async () => {
     // In order to provoke an issue with decryption, store invalid seed
     const ogSeed = crypto.generateSeed();
+
     const [result] = await database
       .insert(urlsTable)
       .values({

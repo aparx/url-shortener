@@ -8,7 +8,7 @@ import {
 /**
  * Interface responsible for providing cryptography and security features for
  * shortened URLs, such as encrypting and decrypting endpoints, hashing
- * passwords and generating the crytographic seed.
+ * passwords & endpoints and generating the crytographic seed.
  *
  * The interface also publicly exposes an `encoding` field, further describing
  * the buffer encoding used for "stringifying" the crypotgraphic seed and its
@@ -21,7 +21,7 @@ export interface UrlCryptography {
 
   decryptUrl(encryptedUrl: string, seed: Buffer): string;
 
-  hashPassword(password: string, seed: Buffer): string;
+  hashString(plainString: string, seed: Buffer): string;
 
   /** Generates a random buffer used for salt and IV */
   generateSeed(): Buffer;
@@ -75,11 +75,11 @@ export class DefaultUrlCrypto implements UrlCryptography {
     return decrypted;
   }
 
-  hashPassword(clear: string, salt: Buffer): string {
+  hashString(plainString: string, salt: Buffer): string {
     const minSaltLength = DefaultUrlCrypto.SEED_LENGTH;
     if (salt.length < minSaltLength)
       throw new Error(`Salt must be at least ${minSaltLength} bytes long`);
-    return this.hash(clear, salt).toString(this.encoding);
+    return this.hash(plainString, salt).toString(this.encoding);
   }
 
   /**
