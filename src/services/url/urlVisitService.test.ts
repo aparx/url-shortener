@@ -6,7 +6,8 @@ import { DefaultUrlCoreService } from "./urlCoreService";
 import { DefaultUrlVisitService, UrlVisitService } from "./urlVisitService";
 
 describe("Full integration tests: DefaultUrlVisitService", () => {
-  testService(new DefaultUrlVisitService(new DefaultUrlCoreService(testDb())));
+  const coreService = new DefaultUrlCoreService({ database: testDb() });
+  testService(new DefaultUrlVisitService(coreService));
 });
 
 function testService(service: UrlVisitService) {

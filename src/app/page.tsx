@@ -56,8 +56,10 @@ export default function Home({
           if (state?.state !== "success") return;
           if (!state.fields?.endpoint) throw new Error("Missing endpoint");
           const url = new URL(state.fields.endpoint);
+          console.log("=========================================");
+          console.log("push_url", state.data);
           createModalParam.push({
-            path: state.path,
+            ...state.data,
             endpointHostname: url.hostname,
             endpointProtocol: url.protocol,
             hasPassword: !!state.fields?.password?.trim(),

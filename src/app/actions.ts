@@ -1,14 +1,18 @@
 "use server";
 import { urlCoreService } from "@/services/config";
-import { shortenUrlInputDataSchema, UrlCoreService } from "@/services/url";
+import {
+  shortenUrlInputDataSchema,
+  ShortenUrlResult,
+  UrlCoreService,
+} from "@/services/url";
 import { LibsqlError } from "@libsql/client";
 import { z } from "zod";
 
 type InputSchema = z.infer<typeof shortenUrlInputDataSchema>;
 type ErrorObject = Partial<Record<keyof InputSchema, string[] | undefined>>;
-export type ShortenUrlResult = (
-  | { state: "success"; path: string; error?: never }
-  | { state: "error"; error: ErrorObject; path?: never }
+type ActionsShortenUrlResult = (
+  | { state: "success"; data: ShortenUrlResult; error?: never }
+  | { state: "error"; error: ErrorObject; data?: never }
 ) & {
   fields: Partial<InputSchema> | undefined;
 };
@@ -20,7 +24,7 @@ export async function shortenUrl(_: any, formData: FormData) {
 async function shortenUrlWithService(
   formData: FormData,
   service: UrlCoreService,
-): Promise<ShortenUrlResult> {
+): Promise<ActionsShortenUrlResult> {
   const expireIn = Number(formData.get("expireIn"));
   const path = formData.get("path")?.toString();
   const obj = shortenUrlInputDataSchema.safeParse({
@@ -31,7 +35,7 @@ async function shortenUrlWithService(
     path: path?.trim()?.length ? path : undefined,
   });
 
-  function createError(error: ErrorObject): ShortenUrlResult {
+  function createError(error: ErrorObject): ActionsShortenUrlResult {
     return { state: "error", error, fields: obj.data } as const;
   }
 
@@ -39,7 +43,7 @@ async function shortenUrlWithService(
 
   return service
     .shortenUrl(obj.data)
-    .then((path) => ({ state: "success", path, fields: obj.data }) as const)
+    .then((data) => ({ state: "success", fields: obj.data, data }) as const)
     .catch((error) => {
       if (error instanceof LibsqlError && error.message.includes("UNIQUE"))
         return createError({ path: ["Path must be unique"] });

@@ -4,11 +4,10 @@ import { urlsTable } from "@/db";
 import { testDb } from "@/db/mock";
 import { eq } from "drizzle-orm";
 import { DefaultUrlCoreService, UrlCoreService } from "./urlCoreService";
-import { DefaultUrlCrypto } from "./urlCryptography";
 import { ShortenUrlData } from "./urlSchema";
 
 describe("Full integration tests: DefaultUrlCoreService & DefaultUrlCrypto", () => {
-  testService(new DefaultUrlCoreService(testDb(), new DefaultUrlCrypto()));
+  testService(new DefaultUrlCoreService({ database: testDb() }));
 });
 
 function testService(service: UrlCoreService) {
@@ -68,7 +67,7 @@ function testService(service: UrlCoreService) {
 
   describe("#shortenUrl", () => {
     async function insertAndRetrieve(data: ShortenUrlData) {
-      const path = await service.shortenUrl(data);
+      const { path } = await service.shortenUrl(data);
       const [result] = await service.database
         .select()
         .from(urlsTable)

@@ -46,15 +46,15 @@ export function Badge({
   protocol: string;
   render?: (realProtocol: string, isSecure: boolean) => React.ReactNode;
 }) {
-  const value = useMemo(() => {
+  const realProtocol = useMemo(() => {
     const terminator = protocol.lastIndexOf(":");
     if (terminator === -1) return protocol;
     return protocol.substring(0, terminator);
   }, [protocol]);
 
   return useMemo(() => {
-    if (!value.toLowerCase().includes("https"))
-      return <Insecure {...restProps}>{render(value, false)}</Insecure>;
-    return <Secure {...restProps}>{render(value, true)}</Secure>;
-  }, [value]);
+    if (!realProtocol.toLowerCase().includes("https"))
+      return <Insecure {...restProps}>{render(realProtocol, false)}</Insecure>;
+    return <Secure {...restProps}>{render(realProtocol, true)}</Secure>;
+  }, [realProtocol]);
 }

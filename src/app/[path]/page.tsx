@@ -1,24 +1,26 @@
 import { urlVisitService } from "@/services/config";
 import { redirect } from "next/navigation";
 import { ErrorPage } from "./_partial/error";
+import { InsecurePage } from "./_partial/insecure";
 import { PasswordPage } from "./_partial/password";
 
 export const dynamic = "force-dynamic";
 
 export default async function Page({
-  params,
-  searchParams,
+  params: paramsPromise,
+  searchParams: searchParamsPromise,
 }: {
-  params: { path: string };
-  searchParams: { password?: string };
+  params: Promise<{ path: string }>;
+  searchParams: Promise<{ password?: string }>;
 }) {
+  const params = await paramsPromise;
+  const searchParams = await searchParamsPromise;
   const result = await urlVisitService.attemptVisit(
     params.path,
     searchParams.password,
   );
-  if (result?.state !== "error") {
+  if (result?.state !== "error" && result.secure)
     return redirect(result.endpoint);
-  }
   switch (result.code) {
     case "not-found":
       return <ErrorPage>Link not found</ErrorPage>;
@@ -27,6 +29,7 @@ export default async function Page({
     case "wrong-password":
       return <PasswordPage path={params.path} />;
     default:
-      throw new Error("An unknown error occurred");
+      if (!result.endpoint) throw new Error("Unknown error: missing endpoint");
+      return <InsecurePage endpoint={result.endpoint} />;
   }
 }

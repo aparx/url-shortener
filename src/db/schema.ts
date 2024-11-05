@@ -33,6 +33,7 @@ export const urlsTable = sqliteTable(
     visits: column.int("visits").notNull().default(0),
     once: column.boolean("once").notNull().default(false),
     disabled: column.boolean("disabled").notNull().default(false),
+    secure: column.boolean("secure").default(false),
     createdAt: column.createdAt(),
     updatedAt: column.updatedAt(),
   },

@@ -6,11 +6,12 @@ type VisitAttemptResultErrorCode =
   | "not-found"
   | "wrong-password"
   | "expired"
-  | "endpoint";
+  | "endpoint"
+  | "insecure";
 
 type VisitAttemptResult =
   | { state: "error"; code: VisitAttemptResultErrorCode; endpoint?: never }
-  | { state: "success"; code?: never; endpoint: string };
+  | { state: "success"; code?: never; endpoint: string; secure: boolean };
 
 export interface UrlVisitService {
   readonly core: UrlCoreService;
@@ -54,20 +55,23 @@ export class DefaultUrlVisitService implements UrlVisitService {
     path: string,
     password?: string,
   ): Promise<VisitAttemptResult> {
+    function createError(code: VisitAttemptResultErrorCode) {
+      return { state: "error", code } as const;
+    }
+
     const shortenUrl = await this.core.resolve(path);
-    if (!shortenUrl || shortenUrl.disabled)
-      return { state: "error", code: "not-found" };
+    if (!shortenUrl || shortenUrl.disabled) return createError("not-found");
     if (shortenUrl.once && shortenUrl.visits !== 0)
-      return { state: "error", code: "expired" };
+      return createError("expired");
     if (shortenUrl.expiration && Date.now() > shortenUrl.expiration.getTime())
-      return { state: "error", code: "expired" };
+      return createError("expired");
     if (shortenUrl.hasPassword && !password)
-      return { state: "error", code: "wrong-password" };
+      return createError("wrong-password");
     if (password && !(await this.core.matchesPassword(path, password)))
-      return { state: "error", code: "wrong-password" };
+      return createError("wrong-password");
     const endpoint = await this.logVisitAndDecryptEndpoint(path);
-    if (!endpoint) return { state: "error", code: "endpoint" };
-    return { state: "success", endpoint };
+    if (!endpoint) return createError("endpoint");
+    return { state: "success", endpoint, secure: !!shortenUrl.secure };
   }
 
   async logVisitAndDecryptEndpoint(path: string): Promise<string | null> {

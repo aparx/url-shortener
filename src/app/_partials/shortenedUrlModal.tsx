@@ -19,11 +19,11 @@ export const shortenedModalDataSchema = z.object({
   endpointHostname: z.string(),
   /** The protocol used for the endpoint URL */
   endpointProtocol: z.string(),
-  /** The path (mapping alias) for this endpoint */
-  path: z.string(),
   hasPassword: z.boolean().optional(),
   hasExpiration: z.boolean().optional(),
   hasOnce: z.boolean().optional(),
+  path: z.string(),
+  secure: z.boolean().nullish().optional(),
 });
 
 export function ShortenedUrlModal({
@@ -32,12 +32,11 @@ export function ShortenedUrlModal({
   hasPassword,
   hasExpiration,
   hasOnce,
+  secure,
   path,
   onOpenChange,
 }: ShortenedModalProps) {
   const [opened, setOpened] = useState(true);
-
-  // TODO base64 encode the CreateModalData and use URL to show this modal
 
   useEffect(() => {
     if (typeof navigator === "undefined") return;
@@ -74,6 +73,11 @@ export function ShortenedUrlModal({
                   <span>The link was copied into your clipboard.</span>
                   <AttributeList
                     items={[
+                      {
+                        name: "Link is secure",
+                        checked: !!secure,
+                        icon: <MdLock />,
+                      },
                       {
                         name: "Protected by password",
                         checked: hasPassword,

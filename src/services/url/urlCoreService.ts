@@ -2,6 +2,7 @@ import { urlsTable } from "@/db";
 import { eq, getTableColumns, InferSelectModel, sql } from "drizzle-orm";
 import { LibSQLDatabase } from "drizzle-orm/libsql";
 import { DefaultUrlCrypto, UrlCryptography } from "./urlCryptography";
+import { UrlSafetyService } from "./urlSafetyService";
 import { ShortenUrlData } from "./urlSchema";
 
 /**
@@ -15,20 +16,25 @@ export type ShortenedUrl = Omit<
   "cryptoSeed" | "encryptedEndpoint" | "hashedPassword"
 > & { hasPassword?: boolean };
 
+export interface ShortenUrlResult {
+  path: string;
+  secure?: boolean | null;
+}
+
 export interface UrlCoreService {
   readonly database: LibSQLDatabase<any>;
   readonly crypto: UrlCryptography;
 
   /**
    * Shortens the endpoint contained in `data`, by inserting a new URL row into
-   * the database and returning the unique path generated.
+   * the database and returning the unique path generated and if it's secure.
    * - If `password` is defined in `data`, it is hashed before insertion.
    * - The URL is encrypted before insertion into the database.
    *
    * @throws Error - if `data`'s expiration date is given and not the future
    * @param data the data to be inserted into the database
    */
-  shortenUrl(data: ShortenUrlData): Promise<string>;
+  shortenUrl(data: ShortenUrlData): Promise<ShortenUrlResult>;
 
   matchesPassword(path: string, plainPassword: string): Promise<boolean>;
 
@@ -36,10 +42,23 @@ export interface UrlCoreService {
 }
 
 export class DefaultUrlCoreService implements UrlCoreService {
-  constructor(
-    readonly database: LibSQLDatabase<any>,
-    readonly crypto: UrlCryptography = new DefaultUrlCrypto(),
-  ) {}
+  readonly database: LibSQLDatabase<any>;
+  readonly crypto: UrlCryptography;
+  readonly verifier?: UrlSafetyService;
+
+  constructor({
+    database,
+    verifier,
+    crypto = new DefaultUrlCrypto(),
+  }: {
+    database: DefaultUrlCoreService["database"];
+    crypto?: DefaultUrlCoreService["crypto"];
+    verifier?: DefaultUrlCoreService["verifier"];
+  }) {
+    this.database = database;
+    this.crypto = crypto;
+    this.verifier = verifier;
+  }
 
   async resolve(path: string): Promise<ShortenedUrl | null> {
     const {
@@ -75,7 +94,7 @@ export class DefaultUrlCoreService implements UrlCoreService {
     return this.crypto.hashPassword(password, saltBuffer) === result.hash;
   }
 
-  async shortenUrl(data: ShortenUrlData): Promise<string> {
+  async shortenUrl(data: ShortenUrlData): Promise<ShortenUrlResult> {
     const { endpoint, password, expireIn, ...restData } = data;
     if (endpoint == null) throw new Error("Endpoint cannot be null");
     const seedBuffer = this.crypto.generateSeed();
@@ -95,9 +114,13 @@ export class DefaultUrlCoreService implements UrlCoreService {
         hashedPassword,
         cryptoSeed: seedBuffer.toString(this.crypto.encoding),
         expiration,
+        secure: this.verifier && (await this.verifier.isUrlSafe(data.endpoint)),
         ...restData,
       })
-      .returning({ path: urlsTable.path });
-    return result.path;
+      .returning({
+        path: urlsTable.path,
+        secure: urlsTable.secure,
+      });
+    return result;
   }
 }
