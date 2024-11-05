@@ -6,7 +6,7 @@ import { twMerge } from "tailwind-merge";
 const baseClasses =
   "inline-flex items-center gap-1 px-1 py-1 rounded font-semibold text-xs";
 
-export function Secure({
+export function Safe({
   className,
   children,
   ...restProps
@@ -22,7 +22,7 @@ export function Secure({
   );
 }
 
-export function Insecure({
+export function Unsafe({
   className,
   children,
   ...restProps
@@ -38,7 +38,7 @@ export function Insecure({
   );
 }
 
-export function Badge({
+export function Protocol({
   protocol,
   render = (realProtocol) => realProtocol.toUpperCase(),
   ...restProps
@@ -54,7 +54,7 @@ export function Badge({
 
   return useMemo(() => {
     if (!realProtocol.toLowerCase().includes("https"))
-      return <Insecure {...restProps}>{render(realProtocol, false)}</Insecure>;
-    return <Secure {...restProps}>{render(realProtocol, true)}</Secure>;
+      return <Unsafe {...restProps}>{render(realProtocol, false)}</Unsafe>;
+    return <Safe {...restProps}>{render(realProtocol, true)}</Safe>;
   }, [realProtocol]);
 }

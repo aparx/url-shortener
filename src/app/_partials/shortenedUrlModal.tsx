@@ -6,7 +6,7 @@ import { IoMdArrowForward } from "react-icons/io";
 import { MdClose, MdLock, MdLockClock, MdTimer } from "react-icons/md";
 import QRCode from "react-qr-code";
 import { z } from "zod";
-import { ProtocolBadge } from "../../components/protocolBadge";
+import { Badge } from "../../components/badge";
 
 export interface ShortenedModalProps extends ShortenedModalData {
   onOpenChange?: (isOpened: boolean) => void;
@@ -63,7 +63,7 @@ export function ShortenedUrlModal({
           <Dialog.Description asChild>
             <div className="space-y-4 text-neutral-400">
               <div className="flex items-center gap-2 border-neutral-800 bg-neutral-900 p-1 border rounded-lg">
-                <ProtocolBadge.Badge protocol={endpointProtocol} />
+                <Badge.Protocol protocol={endpointProtocol} />
                 <div>
                   {endpointHostname} {"->"} {path}
                 </div>
