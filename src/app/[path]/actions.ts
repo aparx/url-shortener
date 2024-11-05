@@ -9,7 +9,7 @@ const visitWithPasswordInputSchema = z.object({
   password: z.string(),
 });
 
-export async function visitWithPassword(_: any, formData: FormData) {
+export async function visitWithPassword(_: unknown, formData: FormData) {
   return visitWithPasswordAndService(formData, urlVisitService);
 }
 

@@ -38,7 +38,7 @@ export default function Home({
 
   const modalData = useMemo(
     () => createModalParam.resolve(new URLSearchParams(searchParams)),
-    [searchParams.created],
+    [createModalParam, searchParams],
   );
 
   return (

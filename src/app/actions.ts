@@ -17,7 +17,7 @@ type ActionsShortenUrlResult = (
   fields: Partial<InputSchema> | undefined;
 };
 
-export async function shortenUrl(_: any, formData: FormData) {
+export async function shortenUrl(_: unknown, formData: FormData) {
   return shortenUrlWithService(formData, urlCoreService);
 }
 
