@@ -3,7 +3,8 @@ import { CheckField, PassField, TabGroup, TextField } from "@/components";
 import { useEncodedSearchParam } from "@/hooks/useEncodedSearchParam";
 import React, { memo, useMemo, useState } from "react";
 import { GoogleReCaptchaProvider } from "react-google-recaptcha-v3";
-import { MdLink, MdPassword, MdTag } from "react-icons/md";
+import { BiLinkExternal } from "react-icons/bi";
+import { MdLink, MdPassword, MdSecurity, MdTag } from "react-icons/md";
 import { PageContainer } from "../components/pageContainer";
 import {
   ShortenUrlForm,
@@ -45,40 +46,61 @@ export default function Home({
   return (
     <GoogleReCaptchaProvider
       reCaptchaKey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
+      container={{
+        element: "recaptcha-badge",
+        parameters: {},
+      }}
     >
-      <PageContainer.Root className="max-w-[min(375px,calc(100vw-1rem))]">
-        <TabGroup
-          className="mx-auto"
-          tabs={tabs.map((x) => x.name)}
-          onTabUpdate={setTabIndex}
-          defaultTab={0}
-        />
-        <ShortenUrlForm
-          tabIndex={tabIndex}
-          tabs={tabs}
-          onStateChange={(state) => {
-            if (state?.state !== "success") return;
-            if (!state.fields?.endpoint) throw new Error("Missing endpoint");
-            const url = new URL(state.fields.endpoint);
-            console.log("=========================================");
-            console.log("push_url", state.data);
-            createModalParam.push({
-              ...state.data,
-              endpointHostname: url.hostname,
-              endpointProtocol: url.protocol,
-              hasPassword: !!state.fields?.password?.trim(),
-              hasExpiration: !!state.fields?.expireIn,
-              hasOnce: !!state.fields?.once,
-            });
-          }}
-        />
-        {modalData && (
-          <ShortenedUrlModal
-            {...modalData}
-            onOpenChange={(v) => !v && createModalParam.remove()}
+      <div className="space-y-5 max-w-[min(375px,calc(100vw-1rem))]">
+        <PageContainer.Root className="max-w-full">
+          <TabGroup
+            className="mx-auto"
+            tabs={tabs.map((x) => x.name)}
+            onTabUpdate={setTabIndex}
+            defaultTab={0}
           />
-        )}
-      </PageContainer.Root>
+          <ShortenUrlForm
+            tabIndex={tabIndex}
+            tabs={tabs}
+            onStateChange={(state) => {
+              if (state?.state !== "success") return;
+              if (!state.fields?.endpoint) throw new Error("Missing endpoint");
+              const url = new URL(state.fields.endpoint);
+              createModalParam.push({
+                ...state.data,
+                endpointHostname: url.hostname,
+                endpointProtocol: url.protocol,
+                hasPassword: !!state.fields?.password?.trim(),
+                hasExpiration: !!state.fields?.expireIn,
+                hasOnce: !!state.fields?.once,
+              });
+            }}
+          />
+          {modalData && (
+            <ShortenedUrlModal
+              {...modalData}
+              onOpenChange={(v) => !v && createModalParam.remove()}
+            />
+          )}
+        </PageContainer.Root>
+        <div className="flex items-center gap-2 border-neutral-800 bg-black p-2 border rounded text-neutral-500 text-xs max-w">
+          <MdSecurity size="2.5em" />
+          <div>
+            This site is protected by reCAPTCHA and the{" "}
+            <a href="https://policies.google.com/privacy" className="underline">
+              Google Privacy Policy
+              <BiLinkExternal className="inline-block ml-1" />
+            </a>{" "}
+            and{" "}
+            <a href="https://policies.google.com/terms" className="underline">
+              Terms of Service
+              <BiLinkExternal className="inline-block ml-1" />
+            </a>{" "}
+            apply.
+          </div>
+        </div>
+      </div>
+      <div id="recaptcha-badge" className="hidden" />
     </GoogleReCaptchaProvider>
   );
 }

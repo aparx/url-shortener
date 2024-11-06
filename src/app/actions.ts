@@ -64,9 +64,9 @@ async function verifyCaptcha(token: string) {
     throw new Error("Missing .env: RECAPTCHA_SECRET_KEY");
   const url = new URL("https://www.google.com/recaptcha/api/siteverify");
   url.searchParams.set("secret", process.env.RECAPTCHA_SECRET_KEY!);
-  url.searchParams.set("token", token);
+  url.searchParams.set("response", token);
   const response = await fetch(url.href, { method: "post" });
   const json = await response.json();
   if (!response.ok) throw new Error(JSON.stringify(json));
-  return Boolean(json.data.success);
+  return Boolean(json.success);
 }
