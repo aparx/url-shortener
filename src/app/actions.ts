@@ -8,13 +8,16 @@ import {
 import { LibsqlError } from "@libsql/client";
 import { z } from "zod";
 
-type InputSchema = z.infer<typeof shortenUrlInputDataSchema>;
-type ErrorObject = Partial<Record<keyof InputSchema, string[] | undefined>>;
+const fullShortenUrlInputSchema = shortenUrlInputDataSchema.extend({
+  recaptchaToken: z.string(),
+});
+type FullInputSchema = z.infer<typeof fullShortenUrlInputSchema>;
+type ErrorObject = Partial<Record<keyof FullInputSchema, string[] | undefined>>;
 type ActionsShortenUrlResult = (
   | { state: "success"; data: ShortenUrlResult; error?: never }
   | { state: "error"; error: ErrorObject; data?: never }
 ) & {
-  fields: Partial<InputSchema> | undefined;
+  fields: Partial<FullInputSchema> | undefined;
 };
 
 export async function shortenUrl(_: unknown, formData: FormData) {
@@ -27,12 +30,13 @@ async function shortenUrlWithService(
 ): Promise<ActionsShortenUrlResult> {
   const expireIn = Number(formData.get("expireIn"));
   const path = formData.get("path")?.toString();
-  const obj = shortenUrlInputDataSchema.safeParse({
+  const obj = fullShortenUrlInputSchema.safeParse({
     endpoint: formData.get("endpoint"),
     password: formData.get("password"),
     once: Boolean(formData.get("once")),
     expireIn: isFinite(expireIn) ? expireIn : undefined,
     path: path?.trim()?.length ? path : undefined,
+    recaptchaToken: formData.get("recaptchaToken"),
   });
 
   function createError(error: ErrorObject): ActionsShortenUrlResult {
@@ -40,6 +44,9 @@ async function shortenUrlWithService(
   }
 
   if (obj.error) return createError(obj.error.flatten().fieldErrors);
+
+  const verified = await verifyCaptcha(obj.data.recaptchaToken);
+  if (!verified) return createError({ recaptchaToken: ["Failed to verify"] });
 
   return service
     .shortenUrl(obj.data)
@@ -50,4 +57,16 @@ async function shortenUrlWithService(
       console.error("Uncaught error", error.code, error.message);
       return createError({ endpoint: ["Unknown error"] });
     });
+}
+
+async function verifyCaptcha(token: string) {
+  if (!process.env.RECAPTCHA_SECRET_KEY)
+    throw new Error("Missing .env: RECAPTCHA_SECRET_KEY");
+  const url = new URL("https://www.google.com/recaptcha/api/siteverify");
+  url.searchParams.set("secret", process.env.RECAPTCHA_SECRET_KEY!);
+  url.searchParams.set("token", token);
+  const response = await fetch(url.href, { method: "post" });
+  const json = await response.json();
+  if (!response.ok) throw new Error(JSON.stringify(json));
+  return Boolean(json.data.success);
 }

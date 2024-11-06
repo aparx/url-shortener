@@ -2,6 +2,7 @@
 import { CheckField, PassField, TabGroup, TextField } from "@/components";
 import { useEncodedSearchParam } from "@/hooks/useEncodedSearchParam";
 import React, { memo, useMemo, useState } from "react";
+import { GoogleReCaptchaProvider } from "react-google-recaptcha-v3";
 import { MdLink, MdPassword, MdTag } from "react-icons/md";
 import { PageContainer } from "../components/pageContainer";
 import {
@@ -42,39 +43,43 @@ export default function Home({
   );
 
   return (
-    <PageContainer.Root className="max-w-[min(375px,calc(100vw-1rem))]">
-      <TabGroup
-        className="mx-auto"
-        tabs={tabs.map((x) => x.name)}
-        onTabUpdate={setTabIndex}
-        defaultTab={0}
-      />
-      <ShortenUrlForm
-        tabIndex={tabIndex}
-        tabs={tabs}
-        onStateChange={(state) => {
-          if (state?.state !== "success") return;
-          if (!state.fields?.endpoint) throw new Error("Missing endpoint");
-          const url = new URL(state.fields.endpoint);
-          console.log("=========================================");
-          console.log("push_url", state.data);
-          createModalParam.push({
-            ...state.data,
-            endpointHostname: url.hostname,
-            endpointProtocol: url.protocol,
-            hasPassword: !!state.fields?.password?.trim(),
-            hasExpiration: !!state.fields?.expireIn,
-            hasOnce: !!state.fields?.once,
-          });
-        }}
-      />
-      {modalData && (
-        <ShortenedUrlModal
-          {...modalData}
-          onOpenChange={(v) => !v && createModalParam.remove()}
+    <GoogleReCaptchaProvider
+      reCaptchaKey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
+    >
+      <PageContainer.Root className="max-w-[min(375px,calc(100vw-1rem))]">
+        <TabGroup
+          className="mx-auto"
+          tabs={tabs.map((x) => x.name)}
+          onTabUpdate={setTabIndex}
+          defaultTab={0}
         />
-      )}
-    </PageContainer.Root>
+        <ShortenUrlForm
+          tabIndex={tabIndex}
+          tabs={tabs}
+          onStateChange={(state) => {
+            if (state?.state !== "success") return;
+            if (!state.fields?.endpoint) throw new Error("Missing endpoint");
+            const url = new URL(state.fields.endpoint);
+            console.log("=========================================");
+            console.log("push_url", state.data);
+            createModalParam.push({
+              ...state.data,
+              endpointHostname: url.hostname,
+              endpointProtocol: url.protocol,
+              hasPassword: !!state.fields?.password?.trim(),
+              hasExpiration: !!state.fields?.expireIn,
+              hasOnce: !!state.fields?.once,
+            });
+          }}
+        />
+        {modalData && (
+          <ShortenedUrlModal
+            {...modalData}
+            onOpenChange={(v) => !v && createModalParam.remove()}
+          />
+        )}
+      </PageContainer.Root>
+    </GoogleReCaptchaProvider>
   );
 }
 

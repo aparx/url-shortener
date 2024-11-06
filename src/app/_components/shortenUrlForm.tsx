@@ -7,9 +7,12 @@ import {
 import React, {
   ComponentPropsWithoutRef,
   useActionState,
+  useCallback,
   useEffect,
   useRef,
+  useState,
 } from "react";
+import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import { GrLinkNext } from "react-icons/gr";
 import { ImSpinner7 } from "react-icons/im";
 import { twMerge } from "tailwind-merge";
@@ -43,7 +46,11 @@ export function ShortenUrlForm({
   onStateChange,
   ...restProps
 }: ShortenUrlFormProps) {
+  const { executeRecaptcha } = useGoogleReCaptcha();
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>();
   const [state, submit, isPending] = useActionState(shortenUrl, undefined);
+
+  // Fire state event changes
   const onStateChangeRef = useRef(onStateChange);
   onStateChangeRef.current = onStateChange;
 
@@ -51,12 +58,26 @@ export function ShortenUrlForm({
     onStateChangeRef.current?.(state);
   }, [state]);
 
+  // Handle recaptcha verification
+  const handleReCaptchaVerify = useCallback(async () => {
+    if (!executeRecaptcha) return setRecaptchaToken(null);
+    setRecaptchaToken(await executeRecaptcha("submit"));
+  }, [executeRecaptcha]);
+
+  useEffect(() => {
+    handleReCaptchaVerify();
+  }, [executeRecaptcha]);
+
+  if (process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY == null)
+    throw new Error("Missing .env: NEXT_PUBLIC_RECAPTCHA_SITE_KEY");
+
   return (
     <form
       action={submit}
       className={twMerge("overflow-hidden", className)}
       {...restProps}
     >
+      <input type="hidden" name="recaptchaToken" value={recaptchaToken || ""} />
       <div
         className="flex gap-4"
         style={{
@@ -71,7 +92,11 @@ export function ShortenUrlForm({
         ))}
       </div>
       <div className="flex gap-3 mt-5">
-        <Button className="flex-1" color="cta" disabled={isPending}>
+        <Button
+          className="flex-1"
+          color="cta"
+          disabled={isPending || !recaptchaToken}
+        >
           Shorten URL
           {isPending ? (
             <ImSpinner7 className="animate-spin" />

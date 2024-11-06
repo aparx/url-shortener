@@ -1,7 +1,7 @@
 import { Button } from "@/components";
 import * as Dialog from "@radix-ui/react-dialog";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { IoMdArrowForward } from "react-icons/io";
 import { MdClose, MdLock, MdLockClock, MdTimer } from "react-icons/md";
 import QRCode from "react-qr-code";
@@ -71,30 +71,28 @@ export function ShortenedUrlModal({
               <div className="flex gap-6">
                 <div className="space-y-3">
                   <span>The link was copied into your clipboard.</span>
-                  <AttributeList
-                    items={[
-                      {
-                        name: "Link is secure",
-                        checked: !!secure,
-                        icon: <MdLock />,
-                      },
-                      {
-                        name: "Protected by password",
-                        checked: hasPassword,
-                        icon: <MdLock />,
-                      },
-                      {
-                        name: "One-Time use only",
-                        checked: hasOnce,
-                        icon: <MdTimer />,
-                      },
-                      {
-                        name: "Expires after time",
-                        checked: hasExpiration,
-                        icon: <MdLockClock />,
-                      },
-                    ]}
-                  />
+                  <AttributeList>
+                    <Attribute
+                      name="Link is secure"
+                      checked={!!secure}
+                      icon={<MdLock />}
+                    />
+                    <Attribute
+                      name="Protected by password"
+                      checked={!!hasPassword}
+                      icon={<MdLock />}
+                    />
+                    <Attribute
+                      name="One-Time use only"
+                      checked={!!hasOnce}
+                      icon={<MdTimer />}
+                    />
+                    <Attribute
+                      name="Expires after time"
+                      checked={!!hasExpiration}
+                      icon={<MdLockClock />}
+                    />
+                  </AttributeList>
                 </div>
                 <div className="border-white bg-neutral-200 p-2 border rounded-lg max-w-36">
                   <QRCode
@@ -126,31 +124,41 @@ export function ShortenedUrlModal({
 }
 
 function AttributeList({
-  items,
+  children,
 }: {
-  items: ReadonlyArray<{
-    name: string;
-    checked: boolean | undefined;
-    icon: React.ReactNode;
-  }>;
+  children: Array<React.ReactElement<Parameters<typeof Attribute>[0]>>;
 }) {
   return (
     <ul aria-label="Attributes" className="flex flex-col gap-2 list-none">
-      {items.map(({ name, checked, icon }) => (
-        <li
-          data-active={checked}
-          key={name}
-          className={`flex items-center gap-2 text-neutral-500 data-[active='true']:text-neutral-300 ${!checked ? "line-through" : ""}`}
-        >
-          <div
-            className={`inline-block p-1 rounded-full ${checked ? "bg-sky-950 text-sky-300" : "bg-neutral-800 text-neutral-500"}`}
-          >
-            {icon}
-          </div>
-          {name}
-          <span className="sr-only">{checked ? "Checked" : "Unchecked"}</span>
-        </li>
+      {children.map((x) => (
+        <li key={x.props.name}>{x}</li>
       ))}
     </ul>
+  );
+}
+
+function Attribute({
+  name,
+  icon,
+  checked,
+}: {
+  name: string;
+  icon: React.ReactNode;
+  checked: boolean;
+}) {
+  return (
+    <div
+      data-active={checked}
+      key={name}
+      className={`flex items-center gap-2 text-neutral-500 data-[active='true']:text-neutral-300 ${!checked ? "line-through" : ""}`}
+    >
+      <div
+        className={`inline-block p-1 rounded-full ${checked ? "bg-sky-950 text-sky-300" : "bg-neutral-800 text-neutral-500"}`}
+      >
+        {icon}
+      </div>
+      {name}
+      <span className="sr-only">{checked ? "Checked" : "Unchecked"}</span>
+    </div>
   );
 }
