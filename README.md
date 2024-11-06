@@ -12,6 +12,7 @@ Securely shorten URLs with opt-in password protection, one-time use, expiration 
   - [UrlCryptography: Encryption and hashing](#urlcryptography-encryption-and-hashing)
   - [UrlSafetyService: URL safety evaluation](#urlsafetyservice-url-safety-evaluation)
   - [UrlVisitService: Visit tracking](#urlvisitservice-visit-tracking)
+  - [Google Recaptcha (v3)](#google-recaptcha-v3)
   - [Dependencies](#dependencies)
 - [User Experience](#user-experience)
   - [Accessibility and responsiveness](#accessibility-and-responsiveness)
@@ -32,9 +33,12 @@ By integrating with Google's Safe Browsing API, this service checks the safety o
 This service tracks visits and URL decryption events. Each decryption counts as a "visit" even if the user doesn't click the shortened link directly, potentially offering more granular analytics in the future.
 The reasoning behind this is, that a user - as soon as they receive the endpoint as plaintext - can visit it themselves without using the shortener as redirection tool. 
 
+### Google Recaptcha (v3)
+The shortener uses the score based "hidden" Google Recaptcha to verify incoming shortening requests. The library used for this is [`react-google-recaptcha-v3`](https://www.npmjs.com/package/react-google-recaptcha-v3). As of the current implementation, it is missing proper error handling for when the recaptcha fails.
+
 ### Dependencies
 Following dependencies also have had an impact:
-- [`framer-motion`](https://www.npmjs.com/package/framer-motion), [`react-qr-code`](https://www.npmjs.com/package/react-qr-code), [`react-icons`](https://www.npmjs.com/package/react-icons), [`@radix-ui/*`](https://www.npmjs.com/search?q=%40radix-ui), [`@paralleldrive/cuid2`](https://www.npmjs.com/package/@paralleldrive/cuid2), ...
+- [`react-google-recaptcha-v3`](https://www.npmjs.com/package/react-google-recaptcha-v3), [`framer-motion`](https://www.npmjs.com/package/framer-motion), [`react-qr-code`](https://www.npmjs.com/package/react-qr-code), [`react-icons`](https://www.npmjs.com/package/react-icons), [`@radix-ui/*`](https://www.npmjs.com/search?q=%40radix-ui), [`@paralleldrive/cuid2`](https://www.npmjs.com/package/@paralleldrive/cuid2), ...
 
 ## User experience
 
@@ -50,7 +54,6 @@ When an endpoint has been marked insecure during its shortening, a user is shown
 </p>
 <br clear="right"/>
 
-
 ## Environment variables
 
 Following environment variables are required in order for this project to work in its entirety:
@@ -60,6 +63,8 @@ Following environment variables are required in order for this project to work i
 | `URL_ENCRYPTION_KEY`* | The default implementation expects this key, used to encrypt and decrypt endpoint URLs using AES-256 in CBC mode. The default encoding for this string is **base64**, thus this string must be a 32 byte base64 encoded cryptographic key. **There is no key rotation by default.**
 | `TURSO_DATABASE_URL`* | Used as the target database URL that Drizzle can connect to |
 | `TURSO_AUTH_TOKEN`* | The auth token authenticating the Drizzle client to Turso |
+| `NEXT_PUBLIC_RECAPTCHA_SITE_KEY`* | Google Recaptcha v3 Site Key ([get them here](https://www.google.com/recaptcha/about/)) |
+| `RECAPTCHA_SECRET_KEY`* | Google Recaptcha v3 Secret ([get them here](https://www.google.com/recaptcha/about/)) |
 | `GOOGLE_SAFETY_API_KEY` | Google API key used for Google's Safe Browsing API (v4) |
 | `GOOGLE_SAFETY_CLIENT_ID` | Client - not user - used for analytical purposes by Google  |
 | `GOOGLE_SAFETY_CLIENT_VERSION` | Client ID - not user - used for analytical purposes by Google  |
