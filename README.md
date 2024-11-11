@@ -21,7 +21,7 @@ Securely shorten URLs with opt-in password protection, one-time use, expiration 
 
 ## Technologies and services
 
-This shortener was realised with NextJS 15, Drizzle (SQLite/Turso) & Tailwind CSS. The actual backend is split up in service interfaces to provide maximum modularity and isolate responsibilities. You can find most services and backend under [`src/services`](https://github.com/aparx/url-shortener/tree/master/src/services).
+This shortener was realised with NextJS 15, Drizzle (SQLite/Turso) & Tailwind CSS. The actual backend is split up in service interfaces to provide maximum modularity and isolate responsibilities. You can find most services and backend under [`features/urls/server/services`](https://github.com/aparx/url-shortener/tree/master/src/features/urls/server/service).
 
 ### UrlCryptography: Encryption and hashing
 The URL encryption uses [**AES-256-CBC**](https://en.wikipedia.org/wiki/Advanced_Encryption_Standard), where each shortened URL is encrypted with a unique random 16-byte initialization vector (IV). Passwords are hashed using [**PBKDF2**](https://en.wikipedia.org/wiki/PBKDF2) with SHA-512, and the same seed is used as the salt for password hashing. The seed - and thus the IV and salt - are unique, or at least random, to each shortened URL and stored alongside them in the table for shortened URLs.
