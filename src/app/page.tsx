@@ -10,11 +10,11 @@ import {
   ShortenUrlForm,
   ShortenUrlFormState,
   ShortenUrlFormTab,
-} from "./_components/shortenUrlForm";
+} from "../features/urls/components/shortenUrlForm";
 import {
   shortenedModalDataSchema,
   ShortenedUrlModal,
-} from "./_partials/shortenedUrlModal";
+} from "../features/urls/components/shortenedUrlModal";
 
 const tabs: Readonly<ShortenUrlFormTab[]> = Object.freeze([
   { name: "Essential", page: memo(EssentialPage) },

@@ -1,8 +1,8 @@
 import { memoize } from "@/utils/memoize";
 import { createClient } from "@libsql/client/web";
 import { drizzle } from "drizzle-orm/libsql/web";
-import * as schema from "./schema";
-export * from "./schema";
+import * as schema from "./models";
+export * from "./models";
 
 export type Database = ReturnType<typeof db>;
 

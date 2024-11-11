@@ -8,7 +8,7 @@ import type { Config } from "jest";
 const config: Config = {
   testEnvironment: "node",
   moduleDirectories: ["node_modules", "src"],
-  setupFilesAfterEnv: ["./src/db/mock.ts"],
+  setupFilesAfterEnv: ["./src/database/mock.ts"],
   transform: {
     "^.+.(tsx|ts)?$": ["ts-jest", {}],
   },

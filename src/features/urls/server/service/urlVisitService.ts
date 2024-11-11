@@ -1,4 +1,4 @@
-import { urlsTable } from "@/db";
+import { urlsTable } from "@/database/database";
 import { eq, sql } from "drizzle-orm";
 import { UrlCoreService } from "./urlCoreService";
 

@@ -1,8 +1,8 @@
 "use server";
-import { urlVisitService } from "@/services/config";
-import { UrlVisitService } from "@/services/url";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { urlVisitService } from "../service/config";
+import { UrlVisitService } from "../service/urlVisitService";
 
 const visitWithPasswordInputSchema = z.object({
   path: z.string(),

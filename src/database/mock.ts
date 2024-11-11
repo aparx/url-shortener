@@ -4,7 +4,8 @@ import { createClient } from "@libsql/client/node";
 import { drizzle } from "drizzle-orm/libsql";
 import { migrate } from "drizzle-orm/libsql/migrator";
 import { afterEach } from "node:test";
-import { Database, urlsTable } from ".";
+import { Database } from "./database";
+import { urlsTable } from "./models";
 
 export const testDb = memoize(() => {
   if (process.env.NODE_ENV !== "test")

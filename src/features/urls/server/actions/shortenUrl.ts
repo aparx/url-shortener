@@ -1,12 +1,9 @@
 "use server";
-import { urlCoreService } from "@/services/config";
-import {
-  shortenUrlInputDataSchema,
-  ShortenUrlResult,
-  UrlCoreService,
-} from "@/services/url";
 import { LibsqlError } from "@libsql/client";
 import { z } from "zod";
+import { shortenUrlInputDataSchema } from "../schema";
+import { urlCoreService } from "../service/config";
+import { ShortenUrlResult, UrlCoreService } from "../service/urlCoreService";
 
 const fullShortenUrlInputSchema = shortenUrlInputDataSchema.extend({
   recaptchaToken: z.string(),

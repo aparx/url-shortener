@@ -1,12 +1,12 @@
 "use client";
-import { PageContainer } from "@/components/pageContainer";
 import { Button, PassField, PassFieldRef } from "@/components";
+import { PageContainer } from "@/components/pageContainer";
+import { visitWithPassword } from "@/features/urls/server/actions/visitUrl";
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useRef } from "react";
 import { GrLinkNext } from "react-icons/gr";
 import { ImSpinner7 } from "react-icons/im";
 import { MdLock, MdPassword } from "react-icons/md";
-import { visitWithPassword } from "../actions";
 
 export function PasswordPage({ path }: { path: string }) {
   const [state, submit, isPending] = useActionState(

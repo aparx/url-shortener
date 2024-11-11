@@ -14,9 +14,7 @@ import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import { GrLinkNext } from "react-icons/gr";
 import { ImSpinner7 } from "react-icons/im";
 import { twMerge } from "tailwind-merge";
-import { shortenUrl } from "../actions";
-
-type Awaited<T> = T extends Promise<infer V> ? V : never;
+import { shortenUrl } from "../server/actions/shortenUrl";
 
 type ShortenUrlFormBaseProps = Omit<ComponentPropsWithoutRef<"form">, "action">;
 
@@ -112,6 +110,7 @@ function TabPageContainer({
     else query?.forEach((x) => x.removeAttribute("tabIndex"));
   }, [active]);
 
+  // TODO classes flex-shrink-0 and space-y-5 are not generated at build-time?
   return (
     <div
       id={createTabGroupPanelId(name)}

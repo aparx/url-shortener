@@ -1,5 +1,5 @@
-import { urlsTable } from "@/db";
-import { testDb } from "@/db/mock";
+import { urlsTable } from "@/database/database";
+import { testDb } from "@/database/mock";
 import { describe, expect, test } from "@jest/globals";
 import { eq } from "drizzle-orm";
 import { DefaultUrlCoreService } from "./urlCoreService";

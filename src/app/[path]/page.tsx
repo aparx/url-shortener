@@ -1,4 +1,4 @@
-import { urlVisitService } from "@/services/config";
+import { urlVisitService } from "@/features/urls/server/service/config";
 import { redirect } from "next/navigation";
 import { ErrorPage } from "./_partial/error";
 import { InsecurePage } from "./_partial/insecure";

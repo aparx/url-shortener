@@ -1,7 +1,8 @@
-import { db } from "@/db";
-import { DefaultUrlCoreService, DefaultUrlCrypto } from "./url";
-import { GoogleUrlSafetyService } from "./url/urlSafetyService";
-import { DefaultUrlVisitService } from "./url/urlVisitService";
+import { db } from "@/database/database";
+import { DefaultUrlCoreService } from "./urlCoreService";
+import { DefaultUrlCrypto } from "./urlCryptography";
+import { GoogleUrlSafetyService } from "./urlSafetyService";
+import { DefaultUrlVisitService } from "./urlVisitService";
 
 if (!process.env.URL_ENCRYPTION_KEY)
   throw new Error("Missing in .env: URL_ENCRYPTION_KEY");

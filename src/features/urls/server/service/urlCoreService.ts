@@ -1,8 +1,8 @@
-import { Database, urlsTable } from "@/db";
+import { Database, urlsTable } from "@/database/database";
 import { eq, getTableColumns, InferSelectModel, sql } from "drizzle-orm";
 import { DefaultUrlCrypto, UrlCryptography } from "./urlCryptography";
 import { UrlSafetyService } from "./urlSafetyService";
-import { ShortenUrlData } from "./urlSchema";
+import { ShortenUrlData } from "../schema";
 
 /**
  * The result of UrlCoreService#resolve, omitting secured columns, that should

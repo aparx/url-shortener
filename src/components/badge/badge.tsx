@@ -37,7 +37,6 @@ export function Unsafe({
     </span>
   );
 }
-
 export function Protocol({
   protocol,
   render = (realProtocol) => realProtocol.toUpperCase(),

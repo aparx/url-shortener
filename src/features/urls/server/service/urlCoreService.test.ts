@@ -1,11 +1,11 @@
 import { describe, expect, test } from "@jest/globals";
 
-import { urlsTable } from "@/db";
-import { testDb } from "@/db/mock";
+import { urlsTable } from "@/database/database";
+import { testDb } from "@/database/mock";
 import { eq } from "drizzle-orm";
+import { ShortenUrlData } from "../schema";
 import { DefaultUrlCoreService, UrlCoreService } from "./urlCoreService";
 import { DefaultUrlCrypto } from "./urlCryptography";
-import { ShortenUrlData } from "./urlSchema";
 
 describe("Full integration tests: DefaultUrlCoreService & DefaultUrlCrypto", () => {
   testService(
